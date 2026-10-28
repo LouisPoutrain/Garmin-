@@ -54,14 +54,14 @@ export const MemoryModal: React.FC<MemoryModalProps> = ({
       key: 'injuries_and_sensitivities' as const,
       label: 'Santé & Alertes Blessures',
       icon: AlertTriangle,
-      color: 'text-rose-400',
-      bgColor: 'bg-rose-500/10',
-      borderColor: 'border-rose-500/30',
+      color: 'text-[#F43F5E]',
+      bgColor: 'bg-[#F43F5E]/10',
+      borderColor: 'border-[#F43F5E]/30',
       emptyText: 'Aucune blessure active signalée.',
       action: (memory?.facts?.injuries_and_sensitivities?.length ?? 0) > 0 ? (
         <button
           onClick={onClearInjuries}
-          className="text-[10px] font-bold text-cyan-300 hover:text-cyan-200 bg-cyan-950/60 hover:bg-cyan-900/80 px-2 py-0.5 rounded-full border border-cyan-500/30 transition-colors"
+          className="text-[10px] font-mono font-bold text-[#00A7E1] hover:text-white bg-[#00A7E1]/15 hover:bg-[#00A7E1]/30 px-2 py-0.5 rounded-md border border-[#00A7E1]/30 transition-colors"
         >
           Tout marquer guéri
         </button>
@@ -71,27 +71,27 @@ export const MemoryModal: React.FC<MemoryModalProps> = ({
       key: 'preferences' as const,
       label: 'Préférences & Style',
       icon: Compass,
-      color: 'text-cyan-400',
-      bgColor: 'bg-cyan-500/10',
-      borderColor: 'border-cyan-500/30',
+      color: 'text-[#00A7E1]',
+      bgColor: 'bg-[#00A7E1]/10',
+      borderColor: 'border-[#00A7E1]/30',
       emptyText: 'Aucune préférence enregistrée.',
     },
     {
       key: 'active_goals' as const,
       label: 'Objectifs Actifs',
       icon: Target,
-      color: 'text-amber-400',
-      bgColor: 'bg-amber-500/10',
-      borderColor: 'border-amber-500/30',
+      color: 'text-[#F59E0B]',
+      bgColor: 'bg-[#F59E0B]/10',
+      borderColor: 'border-[#F59E0B]/30',
       emptyText: 'Aucun objectif secondaire.',
     },
     {
       key: 'schedule_constraints' as const,
       label: "Contraintes d'Agenda",
       icon: Calendar,
-      color: 'text-purple-400',
-      bgColor: 'bg-purple-500/10',
-      borderColor: 'border-purple-500/30',
+      color: 'text-[#A855F7]',
+      bgColor: 'bg-[#A855F7]/10',
+      borderColor: 'border-[#A855F7]/30',
       emptyText: "Aucune contrainte d'agenda signalée.",
     },
   ];
@@ -107,7 +107,7 @@ export const MemoryModal: React.FC<MemoryModalProps> = ({
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="fixed inset-0 z-50 bg-black/85 backdrop-blur-xl"
+                className="fixed inset-0 z-50 bg-[#070A10]/85 backdrop-blur-md"
               />
             </Dialog.Overlay>
 
@@ -118,19 +118,19 @@ export const MemoryModal: React.FC<MemoryModalProps> = ({
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.95, y: 15 }}
                 transition={{ type: 'spring', stiffness: 350, damping: 25 }}
-                className="fixed inset-0 z-50 m-auto max-w-3xl max-h-[90vh] overflow-y-auto glass-panel p-6 rounded-3xl border border-white/15 shadow-2xl flex flex-col focus:outline-none"
+                className="fixed inset-0 z-50 m-auto max-w-3xl max-h-[90vh] overflow-y-auto bg-[#0E131D] p-6 rounded-3xl border border-white/[0.08] shadow-2xl flex flex-col focus:outline-none text-slate-200"
               >
                 {/* Header */}
-                <div className="flex items-start justify-between pb-4 border-b border-white/10 mb-5">
+                <div className="flex items-start justify-between pb-4 border-b border-white/[0.08] mb-5">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-[#FF5E36] to-[#8B5CF6] flex items-center justify-center text-white shadow-lg shadow-[#FF5E36]/20">
-                      <Brain className="w-5 h-5" />
+                    <div className="w-10 h-10 rounded-2xl bg-[#00A7E1]/15 border border-[#00A7E1]/30 flex items-center justify-center text-[#00A7E1] shadow-[0_0_15px_rgba(0,167,225,0.2)]">
+                      <Brain className="w-5 h-5 text-[#00A7E1]" />
                     </div>
                     <div>
-                      <Dialog.Title className="text-base font-extrabold text-white tracking-tight">
-                        Mémoire & Historique de l'Athlète
+                      <Dialog.Title className="text-base font-bold text-white tracking-tight">
+                        Mémoire & Télémétrie Historique de l'Athlète
                       </Dialog.Title>
-                      <Dialog.Description className="text-xs text-slate-400">
+                      <Dialog.Description className="text-xs font-mono text-slate-400">
                         Analyse sur 100 activités réelles Garmin Connect et apprentissage adaptatif
                       </Dialog.Description>
                     </div>
@@ -138,7 +138,7 @@ export const MemoryModal: React.FC<MemoryModalProps> = ({
 
                   <Dialog.Close asChild>
                     <button
-                      className="p-1.5 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400"
+                      className="p-1.5 rounded-xl text-slate-400 hover:text-white hover:bg-[#171D2A] transition-colors focus-visible:outline-none"
                       aria-label="Fermer"
                     >
                       <X className="w-5 h-5" />
@@ -148,16 +148,16 @@ export const MemoryModal: React.FC<MemoryModalProps> = ({
 
                 {/* Section 1: Lifetime Garmin Analytics Banner */}
                 <div className="mb-6">
-                  <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 flex items-center gap-1.5">
-                    <Award className="w-3.5 h-3.5 text-cyan-400" />
-                    Statistiques Historiques Garmin
+                  <h4 className="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-400 mb-2 flex items-center gap-1.5">
+                    <Award className="w-3.5 h-3.5 text-[#00A7E1]" />
+                    Télémétrie Historique Cumulée
                   </h4>
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-                    <div className="p-3 rounded-xl bg-slate-950/70 border border-white/5">
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 font-mono">
+                    <div className="p-3 rounded-xl bg-[#121722] border border-white/[0.05]">
                       <span className="text-[10px] uppercase font-bold text-slate-400">
                         Volume Total
                       </span>
-                      <div className="text-base font-black font-mono text-white mt-0.5">
+                      <div className="text-base font-bold text-white mt-0.5">
                         {history?.lifetime_volume_km || 802.7} km
                       </div>
                       <span className="text-[10px] text-slate-400">
@@ -165,11 +165,11 @@ export const MemoryModal: React.FC<MemoryModalProps> = ({
                       </span>
                     </div>
 
-                    <div className="p-3 rounded-xl bg-slate-950/70 border border-white/5">
-                      <span className="text-[10px] uppercase font-bold text-cyan-400">
+                    <div className="p-3 rounded-xl bg-[#121722] border border-white/[0.05]">
+                      <span className="text-[10px] uppercase font-bold text-[#00A7E1]">
                         Course à Pied
                       </span>
-                      <div className="text-base font-black font-mono text-cyan-300 mt-0.5">
+                      <div className="text-base font-bold text-[#00A7E1] mt-0.5">
                         {history?.running_profile?.total_km || 504.7} km
                       </div>
                       <span className="text-[10px] text-slate-400">
@@ -177,11 +177,11 @@ export const MemoryModal: React.FC<MemoryModalProps> = ({
                       </span>
                     </div>
 
-                    <div className="p-3 rounded-xl bg-slate-950/70 border border-white/5">
-                      <span className="text-[10px] uppercase font-bold text-purple-400">
-                        Record de Sortie
+                    <div className="p-3 rounded-xl bg-[#121722] border border-white/[0.05]">
+                      <span className="text-[10px] uppercase font-bold text-[#A855F7]">
+                        Record Sortie
                       </span>
-                      <div className="text-base font-black font-mono text-purple-300 mt-0.5 truncate">
+                      <div className="text-base font-bold text-[#A855F7] mt-0.5 truncate">
                         29.95 km
                       </div>
                       <span className="text-[10px] text-slate-400 truncate block">
@@ -189,11 +189,11 @@ export const MemoryModal: React.FC<MemoryModalProps> = ({
                       </span>
                     </div>
 
-                    <div className="p-3 rounded-xl bg-slate-950/70 border border-white/5">
-                      <span className="text-[10px] uppercase font-bold text-orange-400">
+                    <div className="p-3 rounded-xl bg-[#121722] border border-white/[0.05]">
+                      <span className="text-[10px] uppercase font-bold text-[#F59E0B]">
                         Cyclisme Foncier
                       </span>
-                      <div className="text-base font-black font-mono text-orange-300 mt-0.5">
+                      <div className="text-base font-bold text-[#F59E0B] mt-0.5">
                         {history?.cycling_profile?.total_km || 184.2} km
                       </div>
                       <span className="text-[10px] text-slate-400">
@@ -204,10 +204,10 @@ export const MemoryModal: React.FC<MemoryModalProps> = ({
                 </div>
 
                 {/* Section 2: Memory Categories Grid */}
-                <div className="mb-6 space-y-4">
-                  <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-1.5">
-                    <Brain className="w-3.5 h-3.5 text-purple-400" />
-                    Consignes & Préférences Mémorisées
+                <div className="mb-6 space-y-3.5">
+                  <h4 className="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+                    <Brain className="w-3.5 h-3.5 text-[#00A7E1]" />
+                    Consignes & Contexte IA Mémorisés
                   </h4>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -218,7 +218,7 @@ export const MemoryModal: React.FC<MemoryModalProps> = ({
                       return (
                         <div
                           key={cat.key}
-                          className="p-3.5 rounded-2xl bg-slate-950/60 border border-white/5 space-y-2.5 flex flex-col justify-between"
+                          className="p-3.5 rounded-2xl bg-[#121722] border border-white/[0.06] space-y-2.5 flex flex-col justify-between"
                         >
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2">
@@ -245,12 +245,12 @@ export const MemoryModal: React.FC<MemoryModalProps> = ({
                                   key={idx}
                                   initial={{ opacity: 0, x: -4 }}
                                   animate={{ opacity: 1, x: 0 }}
-                                  className="flex items-center justify-between gap-2 p-1.5 px-2.5 rounded-lg bg-slate-900 border border-white/5 text-xs text-slate-200 group"
+                                  className="flex items-center justify-between gap-2 p-1.5 px-2.5 rounded-lg bg-[#0F141F] border border-white/[0.04] text-xs text-slate-200 group"
                                 >
-                                  <span className="truncate flex-1">{item}</span>
+                                  <span className="truncate flex-1 font-mono text-[11px]">{item}</span>
                                   <button
                                     onClick={() => onRemoveFact(cat.key, item)}
-                                    className="text-slate-500 hover:text-rose-400 p-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity"
+                                    className="text-slate-500 hover:text-[#F43F5E] p-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity"
                                     title="Oublier ce fait"
                                   >
                                     <Trash2 className="w-3 h-3" />
@@ -266,15 +266,15 @@ export const MemoryModal: React.FC<MemoryModalProps> = ({
                 </div>
 
                 {/* Section 3: Add Fact Form */}
-                <div className="p-3.5 rounded-2xl bg-slate-950/80 border border-white/10 mt-auto">
+                <div className="p-3.5 rounded-2xl bg-[#121722] border border-white/[0.06] mt-auto">
                   <h4 className="text-xs font-bold text-white mb-2">
                     Ajouter une consigne manuellement
                   </h4>
-                  <form onSubmit={handleAdd} className="flex flex-col sm:flex-row gap-2">
+                  <form onSubmit={handleAdd} className="flex flex-col sm:flex-row gap-2 font-mono">
                     <select
                       value={newCategory}
                       onChange={(e) => setNewCategory(e.target.value)}
-                      className="text-xs rounded-xl bg-slate-900 border border-white/10 px-3 py-2 text-slate-200 focus:outline-none focus:ring-1 focus:ring-cyan-400"
+                      className="text-xs rounded-xl bg-[#0F141F] border border-white/[0.08] px-3 py-2 text-slate-200 focus:outline-none focus:border-[#00A7E1]/50"
                     >
                       <option value="preferences">Préférence</option>
                       <option value="injuries_and_sensitivities">Alerte Santé / Douleur</option>
@@ -287,13 +287,13 @@ export const MemoryModal: React.FC<MemoryModalProps> = ({
                       value={newFactText}
                       onChange={(e) => setNewFactText(e.target.value)}
                       placeholder="Ex: Je préfère courir le matin à jeun..."
-                      className="flex-1 text-xs rounded-xl bg-slate-900 border border-white/10 px-3 py-2 text-white placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-cyan-400"
+                      className="flex-1 text-xs rounded-xl bg-[#0F141F] border border-white/[0.08] px-3 py-2 text-white placeholder-slate-500 focus:outline-none focus:border-[#00A7E1]/50"
                     />
 
                     <button
                       type="submit"
                       disabled={!newFactText.trim() || isSubmitting}
-                      className="px-4 py-2 rounded-xl text-xs font-bold btn-sunset disabled:opacity-50 flex items-center justify-center gap-1.5 transition-all"
+                      className="px-4 py-2 rounded-xl text-xs font-semibold btn-telemetry-cyan disabled:opacity-50 flex items-center justify-center gap-1.5 transition-all"
                     >
                       <Plus className="w-3.5 h-3.5 stroke-[2.2]" />
                       <span>Enregistrer</span>

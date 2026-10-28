@@ -116,31 +116,56 @@ export const CommonSchedule: React.FC<CommonScheduleProps> = ({
 
     const athleteBadgeStyle =
       athleteKey === 'louis'
-        ? 'bg-[#E0583A]/15 text-[#E0583A] border-[#E0583A]/30'
-        : 'bg-[#9D78DE]/15 text-[#9D78DE] border-[#9D78DE]/30';
+        ? 'bg-[#00A7E1]/15 text-[#00A7E1] border-[#00A7E1]/30'
+        : 'bg-[#F43F5E]/15 text-[#F43F5E] border-[#F43F5E]/30';
+
+    // Parse intensity zone for telemetry badge (Z1-Z5)
+    const rawZone = item.workout_structure?.hr_zone?.toUpperCase() || '';
+    const rawType = (item.type || '').toLowerCase();
+    const rawIntensity = (item.intensity || '').toLowerCase();
+
+    let zoneBadge = { label: 'Z2 Aérobie', bg: 'bg-[#10B981]/15 text-[#10B981] border-[#10B981]/30' };
+    if (rawZone.includes('Z5') || rawType.includes('vma') || rawIntensity.includes('anaérobie') || rawType.includes('fractionné')) {
+      zoneBadge = { label: 'Z5 Lactique', bg: 'bg-[#F43F5E]/15 text-[#F43F5E] border-[#F43F5E]/30' };
+    } else if (rawZone.includes('Z4') || rawType.includes('seuil') || rawIntensity.includes('seuil') || rawType.includes('spé')) {
+      zoneBadge = { label: 'Z4 Seuil', bg: 'bg-[#F59E0B]/15 text-[#F59E0B] border-[#F59E0B]/30' };
+    } else if (rawZone.includes('Z3') || rawType.includes('tempo')) {
+      zoneBadge = { label: 'Z3 Tempo', bg: 'bg-[#00A7E1]/15 text-[#00A7E1] border-[#00A7E1]/30' };
+    } else if (isRest || rawZone.includes('Z1') || rawType.includes('repos')) {
+      zoneBadge = { label: 'Z1 Récup', bg: 'bg-slate-500/15 text-slate-400 border-slate-500/30' };
+    }
 
     return (
       <div
-        className={`p-3 rounded-xl border text-xs flex flex-col justify-between space-y-2.5 transition-colors ${
+        className={`p-3 rounded-xl border text-xs flex flex-col justify-between space-y-2.5 transition-all ${
           isCompleted
-            ? 'bg-[#121E1A] border-[#3FA372]/30'
+            ? 'bg-[#10231D]/80 border-[#10B981]/35 shadow-[0_0_12px_rgba(16,185,129,0.08)]'
             : isManualCompleted
-            ? 'bg-[#131E24] border-[#4EA8DE]/30'
-            : 'bg-[#151926] border-[#1E2538]'
+            ? 'bg-[#10202E]/80 border-[#00A7E1]/35'
+            : isParentToday
+            ? athleteKey === 'louis'
+              ? 'bg-[#121A2A] border-[#00A7E1]/40 shadow-[0_0_14px_rgba(0,167,225,0.12)]'
+              : 'bg-[#1C1422] border-[#F43F5E]/40 shadow-[0_0_14px_rgba(244,63,94,0.12)]'
+            : 'bg-[#121722] border-white/[0.06] hover:border-white/[0.12]'
         }`}
       >
         <div className="space-y-1.5">
           {/* Header of session: Athlete tag, Sport icon, Type, Duration */}
           <div className="flex items-start justify-between gap-2">
-            <div className="flex items-center gap-1.5 min-w-0">
-              <span className={`text-[9px] font-bold uppercase px-1.5 py-0.2 rounded border ${athleteBadgeStyle}`}>
+            <div className="flex items-center gap-1.5 min-w-0 flex-wrap">
+              <span className={`text-[9px] font-mono font-bold uppercase px-1.5 py-0.2 rounded border ${athleteBadgeStyle}`}>
                 {athleteLabel}
               </span>
+              {!isRest && (
+                <span className={`text-[9px] font-mono font-semibold px-1.5 py-0.2 rounded border ${zoneBadge.bg}`}>
+                  {zoneBadge.label}
+                </span>
+              )}
               <span className="text-sm">{item.sport_icon || (athleteKey === 'louis' ? '🏃‍♂️' : '🏃‍♀️')}</span>
               <span className="font-bold text-slate-100 truncate text-xs">{item.type || 'Séance'}</span>
               {item.is_key && (
-                <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-[#D99738]/15 text-[#D99738] border border-[#D99738]/30 flex-shrink-0">
-                  Clé
+                <span className="text-[9px] font-mono font-bold px-1.5 py-0.2 rounded bg-[#F59E0B]/15 text-[#F59E0B] border border-[#F59E0B]/30 flex-shrink-0">
+                  CLÉ
                 </span>
               )}
             </div>
@@ -159,31 +184,31 @@ export const CommonSchedule: React.FC<CommonScheduleProps> = ({
         </div>
 
         {/* Action Buttons Bar */}
-        <div className="flex items-center justify-between gap-2 pt-1 border-t border-[#1E2535]">
+        <div className="flex items-center justify-between gap-2 pt-2 border-t border-white/[0.06]">
           <div>
             {item.actual_activity ? (
               <button
                 type="button"
                 onClick={() => item.actual_activity?.id && onSelectActivity?.(item.actual_activity.id)}
-                className="text-[10px] font-semibold px-2 py-0.5 rounded-md bg-[#3FA372]/15 text-[#3FA372] border border-[#3FA372]/30 flex items-center gap-1 hover:bg-[#3FA372]/25 transition-colors cursor-pointer"
+                className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded-md bg-[#10B981]/15 text-[#10B981] border border-[#10B981]/30 flex items-center gap-1 hover:bg-[#10B981]/25 transition-colors cursor-pointer"
                 title="Cliquer pour voir les détails de l'activité"
               >
-                <Check className="w-3 h-3 text-[#3FA372]" />
+                <Check className="w-3 h-3 text-[#10B981]" />
                 Réalisé {item.actual_activity.distance_km ? `(${item.actual_activity.distance_km} km)` : ''}
               </button>
             ) : isManualCompleted ? (
-              <span className="text-[10px] font-semibold px-2 py-0.5 rounded-md bg-[#4EA8DE]/15 text-[#4EA8DE] border border-[#4EA8DE]/30 flex items-center gap-1">
-                <Check className="w-3 h-3 text-[#4EA8DE]" />
+              <span className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded-md bg-[#00A7E1]/15 text-[#00A7E1] border border-[#00A7E1]/30 flex items-center gap-1">
+                <Check className="w-3 h-3 text-[#00A7E1]" />
                 Effectué ({item.duration})
               </span>
             ) : isParentToday ? (
-              <span className="text-[10px] font-semibold px-2 py-0.5 rounded-md bg-[#D99738]/15 text-[#D99738] border border-[#D99738]/30 flex items-center gap-1">
-                <Clock className="w-3 h-3" /> À faire aujourd'hui
+              <span className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded-md bg-[#F59E0B]/15 text-[#F59E0B] border border-[#F59E0B]/30 flex items-center gap-1">
+                <Clock className="w-3 h-3" /> Aujourd'hui
               </span>
             ) : isRest ? (
-              <span className="text-[10px] font-medium text-slate-500">Jour off</span>
+              <span className="text-[10px] font-mono text-slate-500">Jour off</span>
             ) : (
-              <span className="text-[10px] text-slate-500">Prévu</span>
+              <span className="text-[10px] font-mono text-slate-500">Planifié</span>
             )}
           </div>
 
@@ -194,7 +219,7 @@ export const CommonSchedule: React.FC<CommonScheduleProps> = ({
                 type="button"
                 onClick={() => handleCancelManual(item, athleteKey)}
                 disabled={isActionLoading}
-                className="text-[10px] text-slate-400 hover:text-slate-200 px-2 py-0.5 rounded bg-[#171C2B] border border-[#232B3E] flex items-center gap-1"
+                className="text-[10px] text-slate-400 hover:text-slate-200 px-2 py-0.5 rounded bg-[#171D2A] border border-white/[0.06] flex items-center gap-1"
                 title="Annuler la complétion manuelle"
               >
                 <RotateCcw className="w-2.5 h-2.5" />
@@ -208,7 +233,7 @@ export const CommonSchedule: React.FC<CommonScheduleProps> = ({
                 type="button"
                 onClick={() => onOpenManualModal(item)}
                 disabled={isActionLoading}
-                className="text-[10px] font-semibold text-slate-300 hover:text-white px-2 py-0.5 rounded bg-[#1C2333] hover:bg-[#252E42] border border-[#2B354C] transition-colors"
+                className="text-[10px] font-semibold text-slate-300 hover:text-white px-2 py-0.5 rounded bg-[#171D2A] hover:bg-[#1E2638] border border-white/[0.08] transition-colors"
               >
                 Valider fait
               </button>
@@ -218,16 +243,16 @@ export const CommonSchedule: React.FC<CommonScheduleProps> = ({
             {item.can_schedule_garmin && !isCompleted && !isManualCompleted && (
               <>
                 {isScheduled ? (
-                  <span className="text-[10px] font-semibold px-2 py-0.5 rounded-md bg-[#4EA8DE]/15 text-[#4EA8DE] border border-[#4EA8DE]/30 flex items-center gap-1">
+                  <span className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded-md bg-[#00A7E1]/15 text-[#00A7E1] border border-[#00A7E1]/30 flex items-center gap-1">
                     <Watch className="w-3 h-3" />
-                    Sur la montre
+                    Sur montre
                   </span>
                 ) : (
                   <div className="flex items-center gap-1">
                     <button
                       type="button"
                       onClick={() => onOpenCustomizer(item)}
-                      className="p-1 rounded-md bg-[#1C2333] hover:bg-[#252E42] text-slate-400 hover:text-slate-200 border border-[#283348] transition-colors"
+                      className="p-1 rounded-md bg-[#171D2A] hover:bg-[#1E2638] text-slate-400 hover:text-slate-200 border border-white/[0.08] transition-colors"
                       title="Personnaliser les allures ou intervalles"
                     >
                       <Sliders className="w-3 h-3" />
@@ -236,7 +261,9 @@ export const CommonSchedule: React.FC<CommonScheduleProps> = ({
                       type="button"
                       onClick={() => handleSchedule(item, athleteKey)}
                       disabled={isActionLoading}
-                      className="text-[10px] font-semibold px-2.5 py-0.5 rounded-md btn-matte-primary flex items-center gap-1 shadow-sm disabled:opacity-50"
+                      className={`text-[10px] font-semibold px-2.5 py-0.5 rounded-md flex items-center gap-1 shadow-sm disabled:opacity-50 transition-all ${
+                        athleteKey === 'louis' ? 'btn-telemetry-cyan' : 'btn-telemetry-coral'
+                      }`}
                       title="Envoyer directement sur la montre Garmin"
                     >
                       {isActionLoading ? (
@@ -244,7 +271,7 @@ export const CommonSchedule: React.FC<CommonScheduleProps> = ({
                       ) : (
                         <Watch className="w-3 h-3" />
                       )}
-                      Sur Garmin
+                      Garmin
                     </button>
                   </div>
                 )}
@@ -354,11 +381,11 @@ export const CommonSchedule: React.FC<CommonScheduleProps> = ({
           const isShared = Boolean(day.is_shared || day.louis?.is_shared || day.clara?.is_shared);
           const hasDuoChildren = Boolean(day.louis && day.clara);
 
-          let cardBorder = 'border-[#1E2535] bg-[#121622]';
+          let cardBorder = 'border-white/[0.06] bg-[#121722]';
           if (isToday) {
-            cardBorder = 'border-[#E0583A]/50 bg-[#161B29] ring-1 ring-[#E0583A]/30';
+            cardBorder = 'border-[#00A7E1]/50 bg-[#121824] ring-1 ring-[#00A7E1]/30 shadow-[0_0_15px_rgba(0,167,225,0.08)]';
           } else if (isShared) {
-            cardBorder = 'border-[#D99738]/40 bg-[#151722]';
+            cardBorder = 'border-[#F59E0B]/40 bg-[#16151E]';
           }
 
           return (
@@ -373,13 +400,13 @@ export const CommonSchedule: React.FC<CommonScheduleProps> = ({
                   <div
                     className={`flex flex-col items-center justify-center px-2 py-1 rounded-lg border text-center flex-shrink-0 ${
                       isToday
-                        ? 'bg-[#E0583A] border-[#E0583A] text-white shadow-sm'
+                        ? 'bg-[#00A7E1] border-[#00A7E1] text-white shadow-sm'
                         : isShared
-                        ? 'bg-[#D99738]/20 border-[#D99738]/40 text-[#D99738]'
-                        : 'bg-[#181D2B] border-[#242C3E] text-slate-300'
+                        ? 'bg-[#F59E0B]/20 border-[#F59E0B]/40 text-[#F59E0B]'
+                        : 'bg-[#171D2A] border-white/[0.06] text-slate-300'
                     }`}
                   >
-                    <span className="text-[10px] font-black uppercase leading-tight">
+                    <span className="text-[10px] font-mono font-black uppercase leading-tight">
                       {day.day_name?.slice(0, 3) || day.day?.slice(0, 3)}
                     </span>
                     <span className="text-xs font-mono font-bold leading-tight">
@@ -394,20 +421,20 @@ export const CommonSchedule: React.FC<CommonScheduleProps> = ({
                       </span>
 
                       {isToday && (
-                        <span className="text-[9px] font-black uppercase px-1.5 py-0.2 rounded bg-[#E0583A] text-white">
+                        <span className="text-[9px] font-mono font-black uppercase px-1.5 py-0.2 rounded bg-[#00A7E1] text-white">
                           Aujourd'hui
                         </span>
                       )}
 
                       {isShared && (
-                        <span className="text-[9px] font-bold uppercase px-2 py-0.5 rounded-md bg-[#D99738]/15 text-[#D99738] border border-[#D99738]/30 flex items-center gap-1">
+                        <span className="text-[9px] font-mono font-bold uppercase px-2 py-0.5 rounded-md bg-[#F59E0B]/15 text-[#F59E0B] border border-[#F59E0B]/30 flex items-center gap-1">
                           🤝 Séance Commune en Duo
                         </span>
                       )}
                     </div>
 
                     {day.shared_notes && (
-                      <div className="text-[11px] text-amber-200/90 font-medium flex items-center gap-1.5 bg-[#D99738]/10 border border-[#D99738]/20 px-2 py-0.5 rounded-md mt-1 w-fit">
+                      <div className="text-[11px] text-amber-200/90 font-medium flex items-center gap-1.5 bg-[#F59E0B]/10 border border-[#F59E0B]/20 px-2 py-0.5 rounded-md mt-1 w-fit">
                         <span>🤝 Synergie :</span>
                         <span>{day.shared_notes}</span>
                       </div>

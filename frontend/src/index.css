@@ -4,16 +4,31 @@
   :root {
     --font-heading: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
     --font-body: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+
+    --bg-telemetry: #0B0E14;
+    --card-surface: #121722;
+    --card-subtle: #171D2A;
+    --card-border: rgba(255, 255, 255, 0.07);
+
+    --athlete-cyan: #00A7E1;
+    --athlete-cyan-glow: rgba(0, 167, 225, 0.25);
+    --athlete-coral: #F43F5E;
+    --athlete-coral-glow: rgba(244, 63, 94, 0.25);
+    --athlete-violet: #A855F7;
+    --metric-emerald: #10B981;
+    --metric-amber: #F59E0B;
   }
 
   html {
     scroll-behavior: smooth;
-    background-color: #0A0D14;
+    background-color: var(--bg-telemetry);
+    color-scheme: dark;
   }
 
   body {
     font-family: var(--font-body);
-    background-color: #0A0D14;
+    background-color: var(--bg-telemetry);
     color: #E2E8F0;
     margin: 0;
     padding: 0;
@@ -26,9 +41,14 @@
     font-family: var(--font-heading);
     letter-spacing: -0.02em;
   }
+
+  code, kbd, samp, pre, .font-mono {
+    font-family: var(--font-mono);
+    font-feature-settings: 'tnum' on, 'zero' on;
+  }
 }
 
-/* Custom Sleek Scrollbar */
+/* Custom Sleek Dark Telemetry Scrollbar */
 ::-webkit-scrollbar {
   width: 5px;
   height: 5px;
@@ -39,59 +59,104 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #252D3D;
+  background: #1F2739;
   border-radius: 9999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #384358;
+  background: #33415A;
 }
 
-/* Matte Design System Surfaces */
-.matte-card {
-  background-color: #121622;
-  border: 1px solid #1E2535;
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.3);
+/* Telemetry Card & Surface System */
+.telemetry-card, .matte-card {
+  background-color: #121722;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.5);
 }
 
-.matte-card-subtle {
-  background-color: #171C2B;
-  border: 1px solid #232B3E;
+.telemetry-card-subtle, .matte-card-subtle {
+  background-color: #171D2A;
+  border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 .matte-card-hover {
-  transition: border-color 0.15s ease, background-color 0.15s ease;
+  transition: border-color 0.2s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .matte-card-hover:hover {
-  border-color: #2D374D;
-  background-color: #151A27;
+  border-color: rgba(255, 255, 255, 0.15);
+  background-color: #151C2C;
 }
 
-/* Matte Action Buttons */
-.btn-matte-primary {
-  background-color: #E0583A;
+/* Telemetry Glow Accents */
+.glow-cyan {
+  box-shadow: 0 0 20px -3px rgba(0, 167, 225, 0.25);
+}
+
+.glow-coral {
+  box-shadow: 0 0 20px -3px rgba(244, 63, 94, 0.25);
+}
+
+.glow-emerald {
+  box-shadow: 0 0 20px -3px rgba(16, 185, 129, 0.25);
+}
+
+.glow-amber {
+  box-shadow: 0 0 20px -3px rgba(245, 158, 11, 0.25);
+}
+
+/* Telemetry Buttons */
+.btn-telemetry-cyan {
+  background-color: #00A7E1;
   color: #FFFFFF;
   font-weight: 600;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 0 12px -2px rgba(0, 167, 225, 0.35);
+  transition: all 0.15s ease;
+}
+
+.btn-telemetry-cyan:hover {
+  background-color: #0284C7;
+  box-shadow: 0 0 18px -1px rgba(0, 167, 225, 0.5);
+}
+
+.btn-telemetry-coral {
+  background-color: #F43F5E;
+  color: #FFFFFF;
+  font-weight: 600;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 0 12px -2px rgba(244, 63, 94, 0.35);
+  transition: all 0.15s ease;
+}
+
+.btn-telemetry-coral:hover {
+  background-color: #E11D48;
+  box-shadow: 0 0 18px -1px rgba(244, 63, 94, 0.5);
+}
+
+.btn-matte-primary {
+  background-color: #00A7E1;
+  color: #FFFFFF;
+  font-weight: 600;
+  border: 1px solid rgba(255, 255, 255, 0.12);
   transition: all 0.15s ease;
 }
 
 .btn-matte-primary:hover {
-  background-color: #C84B30;
+  background-color: #0284C7;
 }
 
 .btn-matte-secondary {
-  background-color: #1C2333;
+  background-color: #171D2A;
   color: #CBD5E1;
-  border: 1px solid #283348;
+  border: 1px solid rgba(255, 255, 255, 0.08);
   transition: all 0.15s ease;
 }
 
 .btn-matte-secondary:hover {
-  background-color: #242D42;
+  background-color: #1E2638;
   color: #FFFFFF;
-  border-color: #35425D;
+  border-color: rgba(255, 255, 255, 0.16);
 }
 
 /* Reduced Motion Override */

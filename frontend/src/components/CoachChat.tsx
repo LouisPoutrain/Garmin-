@@ -5,6 +5,9 @@ import {
   ExternalLink,
   Bot,
   User,
+  Sparkles,
+  Cpu,
+  Terminal,
 } from 'lucide-react';
 import type { ChatMessage } from '../types';
 
@@ -23,6 +26,13 @@ export const CoachChat: React.FC<CoachChatProps> = ({
   const [useSearch, setUseSearch] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  const quickAnalystActions = [
+    { label: '📊 Analyser ma dernière séance', text: 'Peux-tu analyser en détail ma dernière séance et son impact sur la charge ?' },
+    { label: '⚙️ Adapter la séance de demain', text: 'Au vu de ma récupération actuelle, comment adapter la séance de demain ?' },
+    { label: '🤝 Synergie de charge Duo', text: 'Comment se coordonnent nos charges respectives entre Louis et Clara cette semaine ?' },
+    { label: '🎯 Stratégie 10 km', text: 'Quels sont nos axes de progression clés vers nos objectifs 10 km sub-40 et sub-50 ?' },
+  ];
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -53,6 +63,13 @@ export const CoachChat: React.FC<CoachChatProps> = ({
     setInputText(e.target.value);
     e.target.style.height = 'auto';
     e.target.style.height = `${Math.min(e.target.scrollHeight, 120)}px`;
+  };
+
+  const handleQuickAction = (text: string) => {
+    setInputText(text);
+    if (textareaRef.current) {
+      textareaRef.current.focus();
+    }
   };
 
   const renderMessageContent = (content: string) => {
@@ -108,21 +125,28 @@ export const CoachChat: React.FC<CoachChatProps> = ({
   const formatInline = (text: string) => {
     return text
       .replace(/\*\*(.*?)\*\*/g, '<strong class="font-bold text-white">$1</strong>')
-      .replace(/\*(.*?)\*/g, '<em class="text-[#4EA8DE]">$1</em>');
+      .replace(/\*(.*?)\*/g, '<em class="text-[#00A7E1] font-medium">$1</em>');
   };
 
   return (
-    <div className="matte-card rounded-2xl flex flex-col h-[560px] overflow-hidden text-slate-200">
-      {/* Console Header */}
-      <div className="p-3 px-4 border-b border-[#1E2535] flex items-center justify-between gap-3 bg-[#171C2B]">
+    <div className="telemetry-card rounded-2xl flex flex-col h-[580px] overflow-hidden text-slate-200">
+      {/* Telemetry Console Header */}
+      <div className="p-3 px-4 border-b border-white/[0.07] flex items-center justify-between gap-3 bg-[#0E131D]">
         <div className="flex items-center gap-2.5">
-          <span className="w-2 h-2 rounded-full bg-[#3FA372]" />
+          <div className="w-7 h-7 rounded-lg bg-[#171D2A] border border-white/[0.08] flex items-center justify-center text-[#00A7E1]">
+            <Terminal className="w-3.5 h-3.5 text-[#00A7E1]" />
+          </div>
           <div>
-            <h3 className="text-xs font-bold text-white tracking-wide">
-              Coach IA Connecté
-            </h3>
-            <span className="text-[10px] text-slate-400 font-medium">
-              Sciences du sport & Contexte Garmin Duo
+            <div className="flex items-center gap-2">
+              <h3 className="text-xs font-mono font-bold text-white tracking-wider uppercase">
+                Console Performance IA
+              </h3>
+              <span className="text-[9px] font-mono font-bold px-1.5 py-0.2 rounded bg-[#10B981]/20 text-[#10B981] border border-[#10B981]/30">
+                LIVE
+              </span>
+            </div>
+            <span className="text-[10px] font-mono text-slate-400">
+              Sciences du sport • Garmin Duo Sync
             </span>
           </div>
         </div>
@@ -131,20 +155,20 @@ export const CoachChat: React.FC<CoachChatProps> = ({
         <button
           type="button"
           onClick={() => setUseSearch(!useSearch)}
-          className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-semibold border transition-colors ${
+          className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-mono font-semibold border transition-all ${
             useSearch
-              ? 'bg-[#1C2836] text-[#4EA8DE] border-[#4EA8DE]/40'
-              : 'bg-[#131722] text-slate-400 border-[#242C3E]'
+              ? 'bg-[#00A7E1]/15 text-[#00A7E1] border-[#00A7E1]/40 shadow-[0_0_10px_rgba(0,167,225,0.2)]'
+              : 'bg-[#121722] text-slate-400 border-white/[0.06]'
           }`}
           title="Activer ou désactiver la recherche dans la littérature sportive"
         >
           <Globe className="w-3 h-3" />
-          <span>Recherche Web</span>
+          <span>WEB {useSearch ? 'ON' : 'OFF'}</span>
         </button>
       </div>
 
       {/* Messages Scroll Area */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-3.5 bg-[#0D1017]">
+      <div className="flex-1 overflow-y-auto p-4 space-y-3.5 bg-[#0B0E14]">
         {messages.map((msg) => {
           const isUser = msg.role === 'user';
 
@@ -157,21 +181,21 @@ export const CoachChat: React.FC<CoachChatProps> = ({
               <div
                 className={`w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 text-xs font-bold border ${
                   isUser
-                    ? 'bg-[#1C2333] border-[#2B354C] text-[#E0583A]'
-                    : 'bg-[#171C2B] border-[#252D3E] text-[#4EA8DE]'
+                    ? 'bg-[#171D2A] border-[#00A7E1]/30 text-[#00A7E1]'
+                    : 'bg-[#121722] border-white/[0.08] text-[#10B981]'
                 }`}
               >
-                {isUser ? <User className="w-3.5 h-3.5" /> : <Bot className="w-3.5 h-3.5" />}
+                {isUser ? <User className="w-3.5 h-3.5" /> : <Cpu className="w-3.5 h-3.5" />}
               </div>
 
               {/* Message Bubble */}
               <div
                 className={`max-w-[85%] rounded-xl p-3 text-xs ${
                   isUser
-                    ? 'bg-[#1C2333] border border-[#2B354C] text-slate-100 rounded-tr-xs'
+                    ? 'bg-[#141C2B] border border-[#00A7E1]/30 text-slate-100 rounded-tr-xs shadow-[0_0_12px_rgba(0,167,225,0.08)]'
                     : msg.error
-                    ? 'bg-[#2B1717] border border-rose-500/30 text-rose-200'
-                    : 'bg-[#131722] border border-[#1E2535] text-slate-200 rounded-tl-xs shadow-sm'
+                    ? 'bg-rose-950/40 border border-rose-500/30 text-rose-200'
+                    : 'bg-[#121722] border border-white/[0.06] text-slate-200 rounded-tl-xs shadow-sm'
                 }`}
               >
                 {/* Message Body */}
@@ -179,9 +203,9 @@ export const CoachChat: React.FC<CoachChatProps> = ({
 
                 {/* Sources if web search was used */}
                 {msg.sources && msg.sources.length > 0 && (
-                  <div className="mt-2.5 pt-2 border-t border-[#1E2535]">
-                    <div className="text-[10px] uppercase font-bold text-slate-400 flex items-center gap-1 mb-1">
-                      <Globe className="w-2.5 h-2.5 text-[#4EA8DE]" />
+                  <div className="mt-2.5 pt-2 border-t border-white/[0.06]">
+                    <div className="text-[10px] font-mono uppercase font-bold text-slate-400 flex items-center gap-1 mb-1">
+                      <Globe className="w-2.5 h-2.5 text-[#00A7E1]" />
                       Sources consultées :
                     </div>
                     <div className="flex flex-wrap gap-1.5">
@@ -191,7 +215,7 @@ export const CoachChat: React.FC<CoachChatProps> = ({
                           href={src.url}
                           target="_blank"
                           rel="noreferrer"
-                          className="text-[10px] text-[#4EA8DE] hover:underline flex items-center gap-0.5 bg-[#171C2B] px-1.5 py-0.5 rounded border border-[#232B3E]"
+                          className="text-[10px] font-mono text-[#00A7E1] hover:underline flex items-center gap-0.5 bg-[#0F141F] px-1.5 py-0.5 rounded border border-white/[0.06]"
                         >
                           <span className="truncate max-w-[130px]">{src.title}</span>
                           <ExternalLink className="w-2 h-2 flex-shrink-0" />
@@ -213,12 +237,12 @@ export const CoachChat: React.FC<CoachChatProps> = ({
         {/* Loading Spinner */}
         {loading && (
           <div className="flex items-start gap-2.5">
-            <div className="w-7 h-7 rounded-lg bg-[#171C2B] border border-[#252D3E] flex items-center justify-center text-[#4EA8DE]">
+            <div className="w-7 h-7 rounded-lg bg-[#121722] border border-white/[0.08] flex items-center justify-center text-[#00A7E1]">
               <Bot className="w-3.5 h-3.5" />
             </div>
-            <div className="p-3 rounded-xl bg-[#131722] border border-[#1E2535] flex items-center gap-2 text-xs text-slate-400">
-              <span className="w-2 h-2 rounded-full bg-[#4EA8DE] animate-pulse" />
-              <span>Analyse biométrique et calcul en cours...</span>
+            <div className="p-3 rounded-xl bg-[#121722] border border-white/[0.06] flex items-center gap-2 text-xs font-mono text-slate-400">
+              <span className="w-2 h-2 rounded-full bg-[#00A7E1] animate-ping" />
+              <span>Calcul télémétrique & analyse physiologique en cours...</span>
             </div>
           </div>
         )}
@@ -226,8 +250,23 @@ export const CoachChat: React.FC<CoachChatProps> = ({
         <div ref={messagesEndRef} />
       </div>
 
+      {/* Quick Action Analyst Chips */}
+      <div className="px-3 py-1.5 bg-[#0F141F] border-t border-white/[0.04] flex items-center gap-1.5 overflow-x-auto scrollbar-none">
+        <Sparkles className="w-3 h-3 text-[#00A7E1] flex-shrink-0" />
+        {quickAnalystActions.map((action, idx) => (
+          <button
+            key={idx}
+            type="button"
+            onClick={() => handleQuickAction(action.text)}
+            className="text-[10.5px] font-mono whitespace-nowrap px-2 py-0.5 rounded-md bg-[#171D2A] hover:bg-[#1E2638] text-slate-300 hover:text-white border border-white/[0.06] transition-colors flex-shrink-0"
+          >
+            {action.label}
+          </button>
+        ))}
+      </div>
+
       {/* Input Bar */}
-      <div className="p-3 border-t border-[#1E2535] bg-[#121622]">
+      <div className="p-3 border-t border-white/[0.07] bg-[#121722]">
         <form onSubmit={handleSubmit} className="flex items-end gap-2">
           <div className="flex-1 relative">
             <textarea
@@ -236,14 +275,14 @@ export const CoachChat: React.FC<CoachChatProps> = ({
               value={inputText}
               onChange={handleInput}
               onKeyDown={handleKeyDown}
-              placeholder="Posez une question au coach (ex: 'Rappelle-moi le planning', 'Comment optimiser mon sommeil ?')..."
-              className="w-full resize-none rounded-xl bg-[#171C2B] border border-[#232B3E] focus:border-[#4EA8DE]/50 px-3 py-2 text-xs text-white placeholder-slate-500 focus-visible:outline-none transition-colors max-h-28"
+              placeholder="Questionner l'analyste (ex: 'Allure seuil pour Clara', 'Régulation volume')..."
+              className="w-full resize-none rounded-xl bg-[#0B0E14] border border-white/[0.08] focus:border-[#00A7E1]/50 px-3 py-2 text-xs text-white placeholder-slate-500 focus-visible:outline-none transition-colors max-h-28"
             />
           </div>
           <button
             type="submit"
             disabled={!inputText.trim() || loading}
-            className="w-9 h-9 rounded-xl btn-matte-primary flex items-center justify-center flex-shrink-0 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+            className="w-9 h-9 rounded-xl btn-telemetry-cyan flex items-center justify-center flex-shrink-0 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
             title="Envoyer le message"
           >
             <Send className="w-3.5 h-3.5" />

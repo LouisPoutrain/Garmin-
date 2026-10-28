@@ -22,6 +22,7 @@ import { GarminDuoStats } from './components/GarminDuoStats';
 import { RecentActivities } from './components/RecentActivities';
 import { CoachChat } from './components/CoachChat';
 import { AdaptationAlert } from './components/AdaptationAlert';
+import { TodayActionCard } from './components/TodayActionCard';
 import { MemoryModal } from './components/MemoryModal';
 import { ActivityDetailModal } from './components/ActivityDetailModal';
 import { WorkoutCustomizerModal } from './components/WorkoutCustomizerModal';
@@ -321,6 +322,9 @@ export const App: React.FC = () => {
     setModalDay(null);
   };
 
+  const todaySession =
+    weeklyPlan?.days?.find((d) => d.is_today || (weeklyPlan?.today_iso && d.date_iso === weeklyPlan.today_iso)) || null;
+
   return (
     <div className="min-h-screen max-w-7xl mx-auto px-3 sm:px-6 py-4 sm:py-6 text-slate-200">
       {/* 1. Header (Brand, Athlete Switcher, Garmin Connection, Memory) */}
@@ -349,8 +353,16 @@ export const App: React.FC = () => {
 
       {/* Main Single-Page Cockpit Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
-        {/* Colonne Principale Gauche : Emploi du Temps Commun (Zone 1) & Sorties Récentes (Zone 4) */}
+        {/* Colonne Principale Gauche : Hero Séance du Jour, Emploi du Temps Commun (Zone 1) & Sorties Récentes (Zone 4) */}
         <div className="lg:col-span-7 xl:col-span-8 space-y-5">
+          {/* HERO : Séance du Jour Haute Visibilité */}
+          <TodayActionCard
+            todaySession={todaySession}
+            onScheduleWorkout={handleScheduleWorkout}
+            onOpenCustomizer={(day) => setCustomizerDay(day)}
+            onOpenManualModal={(day) => setModalDay(day)}
+          />
+
           {/* ZONE 1 : Emploi du Temps Commun */}
           <CommonSchedule
             days={weeklyPlan?.days || []}

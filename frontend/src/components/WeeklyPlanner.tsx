@@ -1,14 +1,11 @@
 import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
 import {
   Calendar,
   ChevronLeft,
   ChevronRight,
-  CheckCircle2,
   Clock,
   Watch,
   RotateCcw,
-  Flame,
   Check,
   Loader2,
   Sparkles,
@@ -43,11 +40,11 @@ interface WeeklyPlannerProps {
 export const WeeklyPlanner: React.FC<WeeklyPlannerProps> = ({
   days,
   loading,
-  scorecard,
-  louisScorecard,
-  claraScorecard,
+  scorecard: _scorecard,
+  louisScorecard: _louisScorecard,
+  claraScorecard: _claraScorecard,
   coordinationNotes,
-  athleteId = 'louis',
+  athleteId: _athleteId = 'louis',
   weekTitle,
   isCurrentWeek = true,
   offsetWeeks = 0,
@@ -63,8 +60,6 @@ export const WeeklyPlanner: React.FC<WeeklyPlannerProps> = ({
   const [modalDay, setModalDay] = useState<DayPlan | null>(null);
   const [customizerDay, setCustomizerDay] = useState<DayPlan | null>(null);
   const [isGeneratingPlan, setIsGeneratingPlan] = useState(false);
-
-  const isDuo = athleteId === 'duo';
 
   const handleSchedule = async (day: DayPlan, targetAthleteId: string = 'louis') => {
     if (!onScheduleWorkout || !day.date_iso) return;
@@ -175,10 +170,9 @@ export const WeeklyPlanner: React.FC<WeeklyPlannerProps> = ({
 
   if (loading && days.length === 0) {
     return (
-      <div className="glass-panel p-4 rounded-2xl space-y-3">
+      <div className="telemetry-card p-4 rounded-2xl space-y-3">
         <Skeleton className="h-5 w-48" />
         <Skeleton className="h-10 rounded-xl" />
-        <Skeleton className="h-14 rounded-xl" />
         <Skeleton className="h-14 rounded-xl" />
         <Skeleton className="h-14 rounded-xl" />
         <Skeleton className="h-14 rounded-xl" />
@@ -186,49 +180,65 @@ export const WeeklyPlanner: React.FC<WeeklyPlannerProps> = ({
     );
   }
 
-  const completionPct = scorecard?.completion_rate_percent ?? 0;
-  const completedCount = scorecard?.completed_sessions ?? 0;
-  const totalCount = scorecard?.total_planned_sessions ?? days.filter((d) => !(d.type?.toLowerCase().includes('repos') ?? false)).length;
-
-  // Render athlete session row helper
+  // Render athlete session row helper with telemetry intensity codes
   const renderAthleteRow = (
     item: DayPlan,
     athleteKey: 'louis' | 'clara',
     athleteLabel: string,
     isParentToday: boolean
   ) => {
-    const isUltimate = item.sport === 'ultimate';
     const isRest = item.sport === 'recovery' || (item.type?.toLowerCase().includes('repos') ?? false);
     const isKey = item.is_key;
     const isActionLoading = actionLoadingKey === `${athleteKey}_${item.date_iso}`;
 
+    // Intensity color tag
+    const rawZone = item.workout_structure?.hr_zone?.toUpperCase() || '';
+    const rawType = (item.type || '').toLowerCase();
+    let zoneTag = { label: 'Z2 Aérobie', bg: 'bg-[#10B981]/15 text-[#10B981] border-[#10B981]/30' };
+    if (rawZone.includes('Z5') || rawType.includes('vma') || rawType.includes('fractionné')) {
+      zoneTag = { label: 'Z5 Lactique', bg: 'bg-[#F43F5E]/15 text-[#F43F5E] border-[#F43F5E]/30' };
+    } else if (rawZone.includes('Z4') || rawType.includes('seuil')) {
+      zoneTag = { label: 'Z4 Seuil', bg: 'bg-[#F59E0B]/15 text-[#F59E0B] border-[#F59E0B]/30' };
+    } else if (rawZone.includes('Z3') || rawType.includes('tempo')) {
+      zoneTag = { label: 'Z3 Tempo', bg: 'bg-[#00A7E1]/15 text-[#00A7E1] border-[#00A7E1]/30' };
+    } else if (isRest) {
+      zoneTag = { label: 'Z1 Récup', bg: 'bg-slate-500/15 text-slate-400 border-slate-500/30' };
+    }
+
     return (
       <div
-        className={`p-3 rounded-lg border text-xs transition-all space-y-2.5 flex flex-col justify-between ${
+        className={`p-3 rounded-xl border text-xs transition-all space-y-2 flex flex-col justify-between ${
           item.status === 'completed'
-            ? 'bg-emerald-950/20 border-emerald-500/25'
+            ? 'bg-[#10231D]/80 border-[#10B981]/30'
             : item.status === 'completed_manual'
-            ? 'bg-cyan-950/20 border-cyan-500/25'
-            : 'bg-[#121828] border-white/5'
+            ? 'bg-[#10202E]/80 border-[#00A7E1]/30'
+            : isParentToday
+            ? 'bg-[#151D2C] border-[#00A7E1]/40 shadow-[0_0_12px_rgba(0,167,225,0.1)]'
+            : 'bg-[#121722] border-white/[0.05]'
         }`}
       >
         <div className="space-y-1.5">
           <div className="flex items-start justify-between gap-2">
-            <div className="flex items-center gap-2 min-w-0">
+            <div className="flex items-center gap-1.5 min-w-0 flex-wrap">
               <span
-                className={`text-[10px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wider ${
+                className={`text-[9px] font-mono font-bold px-1.5 py-0.2 rounded border uppercase tracking-wider ${
                   athleteKey === 'louis'
-                    ? 'bg-[#FF5E36]/15 text-[#FF7854] border border-[#FF5E36]/30'
-                    : 'bg-purple-500/15 text-purple-300 border border-purple-500/30'
+                    ? 'bg-[#00A7E1]/15 text-[#00A7E1] border-[#00A7E1]/30'
+                    : 'bg-[#F43F5E]/15 text-[#F43F5E] border-[#F43F5E]/30'
                 }`}
               >
                 {athleteLabel}
               </span>
+              {!isRest && (
+                <span className={`text-[9px] font-mono font-semibold px-1.5 py-0.2 rounded border ${zoneTag.bg}`}>
+                  {zoneTag.label}
+                </span>
+              )}
               <span className="text-sm">{item.sport_icon || (athleteKey === 'louis' ? '🏃‍♂️' : '🏃‍♀️')}</span>
               <span className="font-bold text-slate-100 truncate text-xs">{item.type}</span>
               {isKey && (
-                <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-300 border border-amber-500/30 flex-shrink-0">
-                  Clé
+                <span className="text-[9px] font-mono font-bold px-1.5 py-0.2 rounded bg-[#F59E0B]/15 text-[#F59E0B] border border-[#F59E0B]/30 flex-shrink-0">
+                  CLÉ
                 </span>
               )}
             </div>
@@ -246,90 +256,91 @@ export const WeeklyPlanner: React.FC<WeeklyPlannerProps> = ({
         </div>
 
         {/* Action controls */}
-        <div className="flex items-center justify-between gap-2 pt-1 border-t border-white/5">
+        <div className="flex items-center justify-between gap-2 pt-1 border-t border-white/[0.06]">
           <div>
             {item.actual_activity ? (
               <button
                 type="button"
                 onClick={() => item.actual_activity?.id && onSelectActivity?.(item.actual_activity.id)}
-                className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 border border-emerald-500/30 flex items-center gap-1 transition-colors cursor-pointer"
+                className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-md bg-[#10B981]/15 text-[#10B981] border border-[#10B981]/30 flex items-center gap-1 hover:bg-[#10B981]/25 transition-colors cursor-pointer"
                 title="Cliquer pour afficher les détails de l'activité"
               >
-                <Check className="w-3 h-3 text-emerald-400" />
+                <Check className="w-3 h-3 text-[#10B981]" />
                 Réalisé {item.actual_activity.distance_km ? `(${item.actual_activity.distance_km} km)` : ''}
               </button>
             ) : item.status === 'completed_manual' ? (
-              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-cyan-500/15 text-cyan-300 border border-cyan-500/30 flex items-center gap-1">
-                <Check className="w-3 h-3 text-cyan-400" />
-                Effectué ({item.duration})
+              <span className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded-md bg-[#00A7E1]/15 text-[#00A7E1] border border-[#00A7E1]/30 flex items-center gap-1">
+                <Check className="w-3 h-3 text-[#00A7E1]" />
+                Validé ({item.duration})
               </span>
             ) : isParentToday ? (
-              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-300 border border-amber-500/30 flex items-center gap-1">
-                <Clock className="w-3 h-3" /> À faire aujourd'hui
+              <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-md bg-[#F59E0B]/15 text-[#F59E0B] border border-[#F59E0B]/30 flex items-center gap-1">
+                <Clock className="w-3 h-3" /> Aujourd'hui
               </span>
             ) : isRest ? (
-              <span className="text-[10px] font-medium text-slate-400">Repos</span>
+              <span className="text-[10px] font-mono text-slate-500">Jour off</span>
             ) : (
-              <span className="text-[10px] text-slate-500">Prévu</span>
+              <span className="text-[10px] font-mono text-slate-500">Planifié</span>
             )}
           </div>
 
           <div className="flex items-center gap-1.5 ml-auto">
-            {item.can_manual_toggle && !item.actual_activity && (
-              <>
-                {item.status === 'completed_manual' ? (
-                  <button
-                    onClick={() => handleCancelManual(item, athleteKey)}
-                    disabled={isActionLoading}
-                    className="text-[10px] text-slate-400 hover:text-slate-200 px-2 py-0.5 rounded bg-slate-800 border border-white/10 flex items-center gap-1"
-                  >
-                    <RotateCcw className="w-2.5 h-2.5" /> Annuler
-                  </button>
-                ) : (
-                  <button
-                    onClick={() => setModalDay({ ...item, athlete_id: athleteKey })}
-                    disabled={isActionLoading}
-                    className="text-[10px] font-bold text-cyan-300 hover:text-cyan-200 px-2 py-0.5 rounded bg-cyan-500/15 border border-cyan-500/30 flex items-center gap-1 active:scale-95"
-                  >
-                    <Check className="w-3 h-3" />
-                    {isUltimate ? 'Valider Ultimate' : 'Valider fait'}
-                  </button>
-                )}
-              </>
+            {item.can_manual_toggle && !item.actual_activity && item.status === 'completed_manual' && (
+              <button
+                type="button"
+                onClick={() => handleCancelManual(item, athleteKey)}
+                disabled={isActionLoading}
+                className="text-[10px] text-slate-400 hover:text-slate-200 px-2 py-0.5 rounded bg-[#171D2A] border border-white/[0.06] flex items-center gap-1"
+                title="Annuler la validation manuelle"
+              >
+                <RotateCcw className="w-2.5 h-2.5" />
+                Annuler
+              </button>
             )}
 
-            {item.sport === 'running' && !item.actual_activity && (
+            {item.can_manual_toggle && !item.actual_activity && item.status !== 'completed_manual' && !isRest && (
+              <button
+                type="button"
+                onClick={() => setModalDay(item)}
+                disabled={isActionLoading}
+                className="text-[10px] font-semibold text-slate-300 hover:text-white px-2 py-0.5 rounded bg-[#171D2A] hover:bg-[#1E2638] border border-white/[0.08] transition-colors"
+              >
+                Valider fait
+              </button>
+            )}
+
+            {item.can_schedule_garmin && item.status !== 'completed' && item.status !== 'completed_manual' && (
               <>
                 {item.garmin_scheduled ? (
-                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-900 text-slate-300 border border-white/10 flex items-center gap-1">
-                    <Watch className="w-3 h-3 text-cyan-400" /> Sur montre
+                  <span className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded-md bg-[#00A7E1]/15 text-[#00A7E1] border border-[#00A7E1]/30 flex items-center gap-1">
+                    <Watch className="w-3 h-3" />
+                    Sur montre
                   </span>
                 ) : (
                   <div className="flex items-center gap-1">
                     <button
                       type="button"
-                      onClick={() => setCustomizerDay({ ...item, athlete_id: athleteKey })}
-                      disabled={isActionLoading}
-                      title="Personnaliser les étapes de la séance"
-                      className="p-1 rounded bg-slate-800 border border-white/10 text-slate-400 hover:text-cyan-300"
+                      onClick={() => setCustomizerDay(item)}
+                      className="p-1 rounded-md bg-[#171D2A] hover:bg-[#1E2638] text-slate-400 hover:text-slate-200 border border-white/[0.08] transition-colors"
+                      title="Personnaliser les allures ou intervalles"
                     >
                       <Sliders className="w-3 h-3" />
                     </button>
                     <button
+                      type="button"
                       onClick={() => handleSchedule(item, athleteKey)}
                       disabled={isActionLoading}
-                      className={`text-[10px] font-bold text-white px-2 py-0.5 rounded border flex items-center gap-1 shadow-sm active:scale-95 ${
-                        athleteKey === 'clara'
-                          ? 'bg-purple-600 hover:bg-purple-500 border-purple-400/40'
-                          : 'bg-[#FF5E36] hover:bg-[#FF7854] border-[#FF5E36]/40'
+                      className={`text-[10px] font-semibold px-2.5 py-0.5 rounded-md flex items-center gap-1 shadow-sm disabled:opacity-50 transition-all ${
+                        athleteKey === 'louis' ? 'btn-telemetry-cyan' : 'btn-telemetry-coral'
                       }`}
+                      title="Envoyer directement sur la montre Garmin"
                     >
                       {isActionLoading ? (
                         <Loader2 className="w-3 h-3 animate-spin" />
                       ) : (
                         <Watch className="w-3 h-3" />
                       )}
-                      Montre {athleteLabel}
+                      Garmin
                     </button>
                   </div>
                 )}
@@ -342,164 +353,108 @@ export const WeeklyPlanner: React.FC<WeeklyPlannerProps> = ({
   };
 
   return (
-    <div className="glass-panel p-4 rounded-2xl space-y-4">
-      {/* 1. Header with Week Navigation & Temporal Badge */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pb-2 border-b border-white/5">
-        <div className="flex items-center gap-2">
-          {isDuo ? (
-            <HeartHandshake className="w-4 h-4 text-amber-400" />
-          ) : (
-            <Calendar className="w-4 h-4 text-[#38BDF8]" />
-          )}
+    <div className="telemetry-card rounded-2xl p-4 sm:p-5 space-y-4 text-slate-200">
+      {/* 1. Header with Week Navigation & Cycle IA Button */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-white/[0.07]">
+        <div className="flex items-center gap-2.5">
+          <Calendar className="w-4 h-4 text-[#00A7E1]" />
           <div>
-            <div className="flex items-center gap-2">
-              <h3 className="text-sm font-bold text-white tracking-wide">
-                {isDuo ? 'Planning Duo Synchronisé (Louis & Clara)' : 'Planning Hebdomadaire Connecté'}
-              </h3>
-              {isDuo && (
-                <span className="text-[10px] uppercase font-black px-2 py-0.2 rounded-full bg-gradient-to-r from-amber-500/20 to-purple-500/20 text-amber-300 border border-amber-400/30">
-                  Duo 10 km
-                </span>
-              )}
-            </div>
-            <p className="text-[11px] text-slate-400 font-mono">
-              {weekTitle || 'Semaine en cours'}
+            <h3 className="text-xs font-mono font-bold uppercase tracking-wider text-white">
+              Planning Télémétrique • Timeline Sportive
+            </h3>
+            <p className="text-[11px] font-mono text-slate-400">
+              {weekTitle || 'Semaine active'}
             </p>
           </div>
         </div>
 
         {/* Action & Navigation Buttons */}
-        <div className="flex items-center gap-1.5 self-end sm:self-auto">
-          {onGeneratePlan && !isDuo && (
+        <div className="flex items-center gap-1.5 self-end sm:self-auto font-mono">
+          {onGeneratePlan && (
             <button
+              type="button"
               onClick={handleGeneratePlanClick}
               disabled={isGeneratingPlan || loading}
-              title="Générer ou réinitialiser le cycle progressif sur 3 semaines"
-              className="text-[11px] font-semibold px-2.5 py-1 rounded-lg bg-gradient-to-r from-cyan-500/15 to-blue-500/15 hover:from-cyan-500/25 hover:to-blue-500/25 text-cyan-300 border border-cyan-500/30 transition-all flex items-center gap-1.5 active:scale-95 shadow-sm mr-1"
+              title="Générer le cycle progressif sur 3 semaines"
+              className="text-[11px] font-semibold px-2.5 py-1 rounded-lg bg-[#171D2A] hover:bg-[#1E2638] text-[#00A7E1] border border-white/[0.08] transition-colors flex items-center gap-1.5 mr-1"
             >
               {isGeneratingPlan ? (
-                <Loader2 className="w-3.5 h-3.5 animate-spin text-cyan-400" />
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
               ) : (
-                <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
+                <Sparkles className="w-3.5 h-3.5" />
               )}
-              <span className="hidden sm:inline">Cycle 3 semaines</span>
+              <span className="hidden sm:inline">Cycle 3 Semaines IA</span>
             </button>
           )}
 
           <button
+            type="button"
             onClick={() => onNavigateWeek?.(offsetWeeks - 1)}
             disabled={loading}
             title="Semaine précédente"
-            className="p-1.5 rounded-lg bg-slate-900/60 hover:bg-slate-800 border border-white/5 text-slate-300 hover:text-white transition-colors disabled:opacity-50"
+            className="p-1.5 rounded-lg bg-[#171D2A] hover:bg-[#20293C] border border-white/[0.06] text-slate-300 hover:text-white transition-colors disabled:opacity-40"
           >
             <ChevronLeft className="w-4 h-4" />
           </button>
 
           {!isCurrentWeek || offsetWeeks !== 0 ? (
             <button
+              type="button"
               onClick={() => onNavigateWeek?.(0)}
-              className="text-[11px] px-2 py-1 rounded-lg bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 transition-colors font-medium"
+              className="text-[11px] font-semibold px-2.5 py-1 rounded-lg bg-[#171D2A] hover:bg-[#1E2638] text-slate-300 hover:text-white border border-white/[0.08] transition-colors"
             >
               Cette semaine
             </button>
           ) : (
-            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-cyan-500/15 text-cyan-300 border border-cyan-500/30 flex items-center gap-1">
-              <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
-              Semaine active
+            <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-[#10B981]/15 text-[#10B981] border border-[#10B981]/30 flex items-center gap-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#10B981] animate-pulse" />
+              Active
             </span>
           )}
 
           <button
+            type="button"
             onClick={() => onNavigateWeek?.(offsetWeeks + 1)}
             disabled={loading}
             title="Semaine suivante"
-            className="p-1.5 rounded-lg bg-slate-900/60 hover:bg-slate-800 border border-white/5 text-slate-300 hover:text-white transition-colors disabled:opacity-50"
+            className="p-1.5 rounded-lg bg-[#171D2A] hover:bg-[#20293C] border border-white/[0.06] text-slate-300 hover:text-white transition-colors disabled:opacity-40"
           >
             <ChevronRight className="w-4 h-4" />
           </button>
         </div>
       </div>
 
-      {/* 2. Success Banner */}
-      <AnimatePresence>
-        {successMessage && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            className="p-2.5 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-xs flex items-center gap-2"
-          >
-            <CheckCircle2 className="w-4 h-4 flex-shrink-0 text-emerald-400" />
-            <span className="font-medium">{successMessage}</span>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* Feedback Banner */}
+      {successMessage && (
+        <div className="p-2.5 rounded-xl bg-[#10231D] border border-[#10B981]/40 text-[#10B981] text-xs font-mono flex items-center gap-2">
+          <Check className="w-4 h-4 flex-shrink-0" />
+          <span>{successMessage}</span>
+        </div>
+      )}
 
-      {/* 2b. Coordination Tip Banner in Duo Mode */}
-      {isDuo && coordinationNotes && (
-        <div className="p-3 rounded-xl bg-[#0F1424] border border-amber-500/25 text-xs text-amber-200/90 flex items-start gap-2.5 shadow-sm">
-          <HeartHandshake className="w-4 h-4 text-amber-400 flex-shrink-0 mt-0.5" />
+      {/* Coordination Notes Banner */}
+      {coordinationNotes && (
+        <div className="p-3 rounded-xl bg-[#1A1812] border border-[#F59E0B]/30 text-xs text-amber-200/90 flex items-start gap-2.5">
+          <HeartHandshake className="w-4 h-4 text-[#F59E0B] flex-shrink-0 mt-0.5" />
           <div>
-            <span className="font-bold text-amber-300 block mb-0.5">Synergie d'entraînement du couple :</span>
+            <span className="font-bold font-mono text-[#F59E0B] block mb-0.5">Synergie d'entraînement du couple :</span>
             {coordinationNotes}
           </div>
         </div>
       )}
 
-      {/* 3. Weekly Scorecard Track */}
-      <div className="p-3 rounded-xl bg-slate-950/40 border border-white/5 space-y-2">
-        <div className="flex items-center justify-between text-xs">
-          <span className="text-slate-300 font-medium flex items-center gap-1.5">
-            <Flame className="w-3.5 h-3.5 text-[#FF5E36]" />
-            {isDuo ? 'Complétion des séances prévues' : 'Suivi des séances'} :{' '}
-            <strong className="text-white font-mono">
-              {completedCount} / {totalCount}
-            </strong>
-          </span>
-          <span className="font-bold font-mono text-cyan-300">{completionPct}%</span>
-        </div>
-
-        {isDuo && louisScorecard && claraScorecard && (
-          <div className="flex items-center justify-between text-[11px] text-slate-400 font-mono pt-1 border-t border-white/5">
-            <span>
-              <strong className="text-[#FF7854]">Louis :</strong> {louisScorecard.completed_sessions}/{louisScorecard.total_planned_sessions} ({louisScorecard.actual_volume_km} km)
-            </span>
-            <span>
-              <strong className="text-purple-300">Clara :</strong> {claraScorecard.completed_sessions}/{claraScorecard.total_planned_sessions} ({claraScorecard.actual_volume_km} km)
-            </span>
-          </div>
-        )}
-
-        <div className="h-2 rounded-full bg-slate-900 border border-white/5 overflow-hidden">
-          <motion.div
-            initial={{ width: 0 }}
-            animate={{ width: `${Math.min(completionPct, 100)}%` }}
-            transition={{ duration: 0.6, ease: 'easeOut' }}
-            className={`h-full rounded-full ${
-              isDuo
-                ? 'bg-gradient-to-r from-[#F59E0B] via-[#EC4899] to-[#8B5CF6]'
-                : 'bg-gradient-to-r from-[#FF5E36] to-[#00F0FF]'
-            }`}
-          />
-        </div>
-      </div>
-
-      {/* 4. Days List */}
+      {/* 2. Days List (7 Days) */}
       <div className="space-y-3">
         {days.map((day, idx) => {
           const isToday = Boolean(day.is_today || (todayIso && day.date_iso === todayIso));
-          const isShared = Boolean(day.is_shared || (day.louis?.is_shared) || (day.clara?.is_shared));
-          const hasDuoChildren = isDuo && day.louis && day.clara;
+          const isShared = Boolean(day.is_shared || day.louis?.is_shared || day.clara?.is_shared);
+          const hasDuoChildren = Boolean(day.louis && day.clara);
 
-          let cardBorder = 'border-slate-800/80 bg-[#0E1320] hover:border-slate-700';
+          let cardBorder = 'border-white/[0.06] bg-[#121722]';
           if (isToday) {
-            cardBorder =
-              'border-[#FF5E36]/40 bg-[#121828] shadow-sm ring-1 ring-[#FF5E36]/30';
+            cardBorder = 'border-[#00A7E1]/50 bg-[#121824] ring-1 ring-[#00A7E1]/30 shadow-[0_0_15px_rgba(0,167,225,0.08)]';
           } else if (isShared) {
-            cardBorder =
-              'border-amber-500/30 bg-[#121624] shadow-sm';
-          } else if (day.status === 'completed') {
-            cardBorder = 'border-emerald-500/25 bg-[#0C141E] hover:border-emerald-500/40';
+            cardBorder = 'border-[#F59E0B]/40 bg-[#16151E]';
           }
 
           return (
@@ -507,19 +462,19 @@ export const WeeklyPlanner: React.FC<WeeklyPlannerProps> = ({
               key={day.date_iso || day.day || idx}
               className={`p-3.5 rounded-xl border ${cardBorder} transition-all space-y-3`}
             >
-              {/* Day Header Row: Date badge, day name, and shared badge */}
+              {/* Day Header Row */}
               <div className="flex items-center justify-between gap-3">
                 <div className="flex items-center gap-2.5">
                   <div
                     className={`flex flex-col items-center justify-center px-2 py-1 rounded-lg border text-center flex-shrink-0 ${
                       isToday
-                        ? 'bg-[#FF5E36] border-[#FF5E36] text-white shadow-sm'
+                        ? 'bg-[#00A7E1] border-[#00A7E1] text-white shadow-sm'
                         : isShared
-                        ? 'bg-amber-500/20 border-amber-400/40 text-amber-300'
-                        : 'bg-slate-900 border-white/10 text-slate-300'
+                        ? 'bg-[#F59E0B]/20 border-[#F59E0B]/40 text-[#F59E0B]'
+                        : 'bg-[#171D2A] border-white/[0.06] text-slate-300'
                     }`}
                   >
-                    <span className="text-[10px] font-black uppercase leading-tight">
+                    <span className="text-[10px] font-mono font-black uppercase leading-tight">
                       {day.day_name?.slice(0, 3) || day.day?.slice(0, 3)}
                     </span>
                     <span className="text-xs font-mono font-bold leading-tight">
@@ -534,43 +489,38 @@ export const WeeklyPlanner: React.FC<WeeklyPlannerProps> = ({
                       </span>
 
                       {isToday && (
-                        <span className="text-[9px] font-black uppercase px-1.5 py-0.2 rounded bg-[#FF5E36] text-white">
+                        <span className="text-[9px] font-mono font-black uppercase px-1.5 py-0.2 rounded bg-[#00A7E1] text-white">
                           Aujourd'hui
                         </span>
                       )}
 
                       {isShared && (
-                        <span className="text-[9px] font-bold uppercase px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-300 border border-amber-500/30 flex items-center gap-1">
+                        <span className="text-[9px] font-mono font-bold uppercase px-2 py-0.5 rounded-md bg-[#F59E0B]/15 text-[#F59E0B] border border-[#F59E0B]/30 flex items-center gap-1">
                           🤝 Séance Commune en Duo
                         </span>
                       )}
                     </div>
-
-                    {day.shared_notes && (
-                      <div className="text-[11px] text-amber-300/90 font-medium flex items-center gap-1.5 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-md mt-1 w-fit">
-                        <span>🤝 Synergie :</span>
-                        <span>{day.shared_notes}</span>
-                      </div>
-                    )}
                   </div>
                 </div>
               </div>
 
-              {/* Render either 2 Duo Columns or Single Athlete Row */}
+              {/* Two Columns: Louis on Left, Clara on Right */}
               {hasDuoChildren ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5 pt-2 border-t border-white/5">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5 pt-2 border-t border-white/[0.06]">
                   {day.louis && renderAthleteRow(day.louis, 'louis', 'Louis', isToday)}
                   {day.clara && renderAthleteRow(day.clara, 'clara', 'Clara', isToday)}
                 </div>
               ) : (
-                renderAthleteRow(day, (athleteId as any) === 'clara' ? 'clara' : 'louis', (athleteId as any) === 'clara' ? 'Clara' : 'Louis', isToday)
+                <div className="pt-2 border-t border-white/[0.06]">
+                  {renderAthleteRow(day, (day.athlete_id as any) || 'louis', day.athlete_id === 'clara' ? 'Clara' : 'Louis', isToday)}
+                </div>
               )}
             </div>
           );
         })}
       </div>
 
-      {/* Manual Session Validation Modal */}
+      {/* Modals */}
       <ManualSessionModal
         day={modalDay}
         isOpen={!!modalDay}
@@ -578,7 +528,6 @@ export const WeeklyPlanner: React.FC<WeeklyPlannerProps> = ({
         onSubmit={handleModalSubmit}
       />
 
-      {/* Workout Customizer Modal */}
       <WorkoutCustomizerModal
         day={customizerDay}
         isOpen={!!customizerDay}

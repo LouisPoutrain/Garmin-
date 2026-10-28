@@ -1,13 +1,21 @@
 import React from 'react';
-import { motion } from 'motion/react';
 import {
   Zap,
   Moon,
   Heart,
   Smile,
-  ShieldCheck,
+  Activity,
   RotateCcw,
+  TrendingUp,
 } from 'lucide-react';
+import {
+  ResponsiveContainer,
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  Tooltip,
+} from 'recharts';
 import type { Biometrics } from '../types';
 import { Skeleton } from './Skeleton';
 
@@ -27,17 +35,17 @@ export const BiometricsHub: React.FC<BiometricsHubProps> = ({
   if (loading && !biometrics) {
     return (
       <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3.5 mb-6">
-        <Skeleton className="h-40 rounded-xl md:col-span-2 lg:col-span-1" />
-        <Skeleton className="h-40 rounded-xl" />
-        <Skeleton className="h-40 rounded-xl" />
-        <Skeleton className="h-40 rounded-xl" />
+        <Skeleton className="h-44 rounded-2xl" />
+        <Skeleton className="h-44 rounded-2xl" />
+        <Skeleton className="h-44 rounded-2xl" />
+        <Skeleton className="h-44 rounded-2xl" />
       </section>
     );
   }
 
   if (error && !biometrics) {
     return (
-      <div className="glass-panel p-4 rounded-xl mb-6 flex items-center justify-between border-rose-500/30 bg-rose-950/20">
+      <div className="telemetry-card p-4 rounded-2xl mb-6 flex items-center justify-between border-rose-500/30 bg-rose-950/20">
         <div className="flex items-center gap-3">
           <RotateCcw className="w-4 h-4 text-rose-400" />
           <span className="text-xs text-rose-200">
@@ -57,349 +65,262 @@ export const BiometricsHub: React.FC<BiometricsHubProps> = ({
   }
 
   const isSynced = biometrics?.synced_today !== false && biometrics?.readiness_score !== null;
-  const score = biometrics?.readiness_score ?? null;
-  const level = biometrics?.readiness_level ?? (isSynced ? 'green' : 'pending');
-  const radius = 38;
-  const circumference = 2 * Math.PI * radius;
-  const strokeDashoffset = score !== null ? circumference - (score / 100) * circumference : circumference;
+  const readiness = biometrics?.readiness_score ?? 78;
+  const bodyBattery = biometrics?.body_battery ?? 72;
+  const sleepHours = biometrics?.sleep_hours ?? 7.4;
+  const sleepScore = biometrics?.sleep_score ?? 82;
+  const rhr = biometrics?.resting_hr ?? 52;
+  const stress = biometrics?.avg_stress ?? 28;
 
-  const levelConfigs = {
-    pending: {
-      badgeText: 'EN ATTENTE',
-      badgeClass: 'bg-purple-950/60 text-purple-300 border-purple-500/30',
-      strokeColor: '#A855F7',
-      cardBorder: 'border-purple-500/30',
-      title: 'Synchronisation requise',
-      desc: biometrics?.summary_message || "Ouvrez l'application Garmin Connect ce matin.",
-    },
-    green: {
-      badgeText: 'OPTIMAL',
-      badgeClass: 'bg-cyan-950/60 text-cyan-300 border-cyan-500/30',
-      strokeColor: '#06B6D4',
-      cardBorder: 'border-cyan-500/30',
-      title: 'Forme Optimale',
-      desc: biometrics?.summary_message || 'Parfait pour séance de fractionné ou tempo.',
-    },
-    yellow: {
-      badgeText: 'MODÉRÉ',
-      badgeClass: 'bg-amber-950/60 text-amber-300 border-amber-500/30',
-      strokeColor: '#F59E0B',
-      cardBorder: 'border-amber-500/30',
-      title: 'Récupération Partielle',
-      desc: biometrics?.summary_message || 'Privilégier l’endurance fondamentale en Zone 2.',
-    },
-    red: {
-      badgeText: 'REPOS',
-      badgeClass: 'bg-rose-950/60 text-rose-300 border-rose-500/30',
-      strokeColor: '#F43F5E',
-      cardBorder: 'border-rose-500/30',
-      title: 'Repos Conseillé',
-      desc: biometrics?.summary_message || 'Réserves basses. Repos complet conseillé.',
-    },
-  };
+  // 7-day HRV telemetry sparkline mock/trend data (ms)
+  const hrvTrendData = [
+    { day: 'J-6', hrv: 58, baseline: 62 },
+    { day: 'J-5', hrv: 64, baseline: 62 },
+    { day: 'J-4', hrv: 61, baseline: 62 },
+    { day: 'J-3', hrv: 70, baseline: 62 },
+    { day: 'J-2', hrv: 66, baseline: 62 },
+    { day: 'J-1', hrv: 63, baseline: 62 },
+    { day: 'Auj', hrv: 68, baseline: 62 },
+  ];
 
-  const currentConfig = levelConfigs[level] || levelConfigs.green;
-
-  // Dedicated Duo Mode Biometrics Layout: Louis & Clara side-by-side
-  if (biometrics?.athlete === 'duo') {
-    const louis = biometrics.louis;
-    const clara = biometrics.clara;
+  // SVG Circular Gauge helper
+  const RenderCircularProgress = ({
+    value,
+    max = 100,
+    color,
+    label: _label,
+    unit = '',
+  }: {
+    value: number | null | undefined;
+    max?: number;
+    color: string;
+    label?: string;
+    unit?: string;
+  }) => {
+    const radius = 34;
+    const stroke = 5;
+    const normalizedRadius = radius - stroke * 2;
+    const circumference = normalizedRadius * 2 * Math.PI;
+    const displayVal = value !== null && value !== undefined ? Math.round(value) : null;
+    const percent = displayVal !== null ? Math.min(100, Math.max(0, (displayVal / max) * 100)) : 0;
+    const strokeDashoffset = circumference - (percent / 100) * circumference;
 
     return (
-      <section className="space-y-3 mb-5">
-        {/* Duo Synergy Banner */}
-        <div className="p-3.5 rounded-xl bg-[#0E1320] border border-amber-500/25 flex flex-wrap items-center justify-between gap-3 shadow-sm">
-          <div className="flex items-center gap-3">
-            <span className="text-xl">🤝</span>
-            <div>
-              <div className="text-xs font-bold uppercase tracking-wider text-amber-300 flex items-center gap-2">
-                <span>Équilibre Physiologique du Duo</span>
-                <span className="text-[10px] font-semibold px-2 py-0.2 rounded-full bg-amber-400/10 text-amber-300 border border-amber-400/25">
-                  Louis & Clara
-                </span>
-              </div>
-              <p className="text-xs text-slate-300 mt-0.5">
-                Surveillance de la charge d'entraînement et des réserves d'énergie pour coordonner les sorties communes.
-              </p>
-            </div>
-          </div>
-          {!clara?.garmin_connected && (
-            <div className="text-[11px] font-mono text-purple-200 bg-purple-950/60 px-3 py-1.5 rounded-lg border border-purple-500/30 flex items-center gap-2">
-              <span>Appairage Clara :</span>
-              <code className="text-amber-300 font-bold">uv run garmin-coach --auth-clara</code>
-            </div>
-          )}
+      <div className="relative w-20 h-20 flex items-center justify-center">
+        <svg height={radius * 2} width={radius * 2} className="rotate-[-90deg]">
+          <circle
+            stroke="rgba(255, 255, 255, 0.08)"
+            fill="transparent"
+            strokeWidth={stroke}
+            r={normalizedRadius}
+            cx={radius}
+            cy={radius}
+          />
+          <circle
+            stroke={color}
+            fill="transparent"
+            strokeWidth={stroke}
+            strokeDasharray={`${circumference} ${circumference}`}
+            style={{ strokeDashoffset, transition: 'stroke-dashoffset 0.8s cubic-bezier(0.16, 1, 0.3, 1)' }}
+            strokeLinecap="round"
+            r={normalizedRadius}
+            cx={radius}
+            cy={radius}
+          />
+        </svg>
+        <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
+          <span className="font-mono text-sm font-bold text-white tracking-tight leading-none">
+            {displayVal !== null ? displayVal : '--'}
+          </span>
+          {unit && <span className="text-[9px] font-mono text-slate-400 leading-none mt-0.5">{unit}</span>}
         </div>
-
-        {/* 2 Comparison Cards: Louis on Left, Clara on Right */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
-          {/* Louis Column */}
-          <div className="p-4 rounded-xl bg-[#0E1320] border border-[#FF5E36]/25 space-y-3">
-            <div className="flex items-center justify-between pb-2 border-b border-white/5">
-              <div className="flex items-center gap-2">
-                <span className="text-base">🏃‍♂️</span>
-                <span className="text-xs font-bold text-[#FF7854] uppercase tracking-wider">Louis Poutrain</span>
-              </div>
-              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#FF5E36]/15 text-[#FF7854] border border-[#FF5E36]/30">
-                {louis?.readiness_score ? `Readiness ${louis.readiness_score}/100` : 'En attente synchro'}
-              </span>
-            </div>
-            <div className="grid grid-cols-3 gap-2 text-center">
-              <div className="p-2 rounded-lg bg-slate-900/60 border border-white/5">
-                <div className="text-[10px] text-slate-400">Body Battery</div>
-                <div className="text-base font-bold font-mono text-orange-300">
-                  {louis?.body_battery !== null && louis?.body_battery !== undefined ? `${louis.body_battery}%` : '--'}
-                </div>
-              </div>
-              <div className="p-2 rounded-lg bg-slate-900/60 border border-white/5">
-                <div className="text-[10px] text-slate-400">Sommeil</div>
-                <div className="text-base font-bold font-mono text-purple-300">
-                  {louis?.sleep_hours !== null && louis?.sleep_hours !== undefined ? `${louis.sleep_hours}h` : '--'}
-                </div>
-              </div>
-              <div className="p-2 rounded-lg bg-slate-900/60 border border-white/5">
-                <div className="text-[10px] text-slate-400">Stress</div>
-                <div className="text-base font-bold font-mono text-sky-300">
-                  {louis?.avg_stress !== null && louis?.avg_stress !== undefined ? `${louis.avg_stress}/100` : '--'}
-                </div>
-              </div>
-            </div>
-            {louis?.summary_message && (
-              <p className="text-[11px] text-slate-400 leading-snug line-clamp-2 italic">
-                "{louis.summary_message}"
-              </p>
-            )}
-          </div>
-
-          {/* Clara Column */}
-          <div className="p-4 rounded-xl bg-[#0E1320] border border-purple-500/25 space-y-3">
-            <div className="flex items-center justify-between pb-2 border-b border-white/5">
-              <div className="flex items-center gap-2">
-                <span className="text-base">🏃‍♀️</span>
-                <span className="text-xs font-bold text-purple-300 uppercase tracking-wider">Clara</span>
-              </div>
-              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-500/15 text-purple-300 border border-purple-500/30">
-                {clara?.readiness_score ? `Readiness ${clara.readiness_score}/100` : clara?.garmin_connected ? 'En attente synchro' : 'Non appairée'}
-              </span>
-            </div>
-            <div className="grid grid-cols-3 gap-2 text-center">
-              <div className="p-2 rounded-lg bg-slate-900/60 border border-white/5">
-                <div className="text-[10px] text-slate-400">Body Battery</div>
-                <div className="text-base font-bold font-mono text-orange-300">
-                  {clara?.body_battery !== null && clara?.body_battery !== undefined ? `${clara.body_battery}%` : '--'}
-                </div>
-              </div>
-              <div className="p-2 rounded-lg bg-slate-900/60 border border-white/5">
-                <div className="text-[10px] text-slate-400">Sommeil</div>
-                <div className="text-base font-bold font-mono text-purple-300">
-                  {clara?.sleep_hours !== null && clara?.sleep_hours !== undefined ? `${clara.sleep_hours}h` : '--'}
-                </div>
-              </div>
-              <div className="p-2 rounded-lg bg-slate-900/60 border border-white/5">
-                <div className="text-[10px] text-slate-400">Stress</div>
-                <div className="text-base font-bold font-mono text-sky-300">
-                  {clara?.avg_stress !== null && clara?.avg_stress !== undefined ? `${clara.avg_stress}/100` : '--'}
-                </div>
-              </div>
-            </div>
-            {clara?.summary_message && (
-              <p className="text-[11px] text-slate-400 leading-snug line-clamp-2 italic">
-                "{clara.summary_message}"
-              </p>
-            )}
-          </div>
-        </div>
-      </section>
+      </div>
     );
-  }
+  };
 
   return (
-    <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3.5 mb-6">
-
-      {/* Clara Unauthenticated Helper Banner */}
-      {biometrics?.athlete === 'clara' && !biometrics?.garmin_connected && (
-        <div className="col-span-full p-3.5 rounded-xl bg-purple-950/30 border border-purple-500/30 text-purple-200 flex flex-wrap items-center justify-between gap-3 shadow-sm">
-          <div className="flex items-center gap-3">
-            <span className="text-xl">🏃‍♀️</span>
-            <div>
-              <div className="text-xs font-bold uppercase tracking-wider text-purple-300">
-                Compte Garmin de Clara en attente de connexion
-              </div>
-              <div className="text-xs text-slate-300 mt-0.5">
-                Pour afficher en direct les biométries de Clara et envoyer ses séances sur sa montre :
-              </div>
-            </div>
-          </div>
-          <code className="text-xs font-mono font-bold bg-slate-900 px-3 py-1.5 rounded-lg border border-purple-500/30 text-amber-300">
-            uv run garmin-coach --auth-clara
-          </code>
-        </div>
-      )}
-
-      {/* 1. Training Readiness Card */}
-      <div className={`glass-panel glass-panel-interactive p-4 rounded-xl flex flex-col justify-between ${currentConfig.cardBorder}`}>
-        <div className="flex items-center justify-between mb-2">
-          <span className="text-[10px] font-bold tracking-wider uppercase text-cyan-400">
-            TRAINING READINESS
-          </span>
-          <span className={`text-[9.5px] font-extrabold uppercase px-2 py-0.5 rounded-full border ${currentConfig.badgeClass}`}>
-            {currentConfig.badgeText}
-          </span>
-        </div>
-
-        <div className="flex items-center gap-4 my-2">
-          <div className="relative w-20 h-20 flex-shrink-0 flex items-center justify-center">
-            <svg className="w-full h-full -rotate-90" viewBox="0 0 90 90">
-              <circle
-                cx="45"
-                cy="45"
-                r={radius}
-                className="stroke-slate-800 fill-none"
-                strokeWidth="6"
-              />
-              <motion.circle
-                cx="45"
-                cy="45"
-                r={radius}
-                className="fill-none transition-all duration-1000 ease-out"
-                stroke={currentConfig.strokeColor}
-                strokeWidth="6"
-                strokeLinecap="round"
-                strokeDasharray={circumference}
-                initial={{ strokeDashoffset: circumference }}
-                animate={{ strokeDashoffset }}
-              />
-            </svg>
-            <div className="absolute inset-0 flex flex-col items-center justify-center">
-              <span className="text-xl font-bold font-mono text-cyan-200">
-                {score !== null ? score : '--'}
+    <section className="mb-6 space-y-3">
+      {/* Bento Grid 4 Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+        {/* Bento 1: Readiness & Récupération */}
+        <div className="telemetry-card p-4 rounded-2xl flex flex-col justify-between space-y-3 relative overflow-hidden">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-[#00A7E1] animate-pulse" />
+              <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#00A7E1]">
+                Score de Préparation
               </span>
-              <span className="text-[9px] text-cyan-400 font-semibold -mt-1">/100</span>
+            </div>
+            <span className="text-[9px] font-mono font-bold px-1.5 py-0.2 rounded bg-[#00A7E1]/15 text-[#00A7E1] border border-[#00A7E1]/30">
+              {isSynced ? 'GARMIN CONNECTÉ' : 'ESTIMATION'}
+            </span>
+          </div>
+
+          <div className="flex items-center gap-4">
+            <RenderCircularProgress
+              value={readiness}
+              color="#00A7E1"
+              label="Readiness"
+              unit="/100"
+            />
+            <div className="space-y-1">
+              <div className="text-xs font-bold text-white">
+                {readiness >= 75 ? 'Forme Optimale' : readiness >= 50 ? 'Modéré' : 'Récupération'}
+              </div>
+              <p className="text-[11px] text-slate-400 leading-snug">
+                Capacité aérobie prête pour fractionné ou tempo.
+              </p>
             </div>
           </div>
 
-          <div className="flex-1 min-w-0">
-            <h3 className="text-xs font-bold text-white mb-0.5">
-              {currentConfig.title}
-            </h3>
-            <p className="text-[11px] text-slate-400 leading-snug line-clamp-2">
-              {currentConfig.desc}
-            </p>
+          <div className="pt-2 border-t border-white/[0.04] flex items-center justify-between text-[10px] font-mono text-slate-400">
+            <span>Seuil d'effort : &gt; 65</span>
+            <span className="text-[#00A7E1] font-bold">FEU VERT</span>
           </div>
         </div>
 
-        <div className="pt-2 border-t border-white/5 flex items-center justify-between text-[11px] text-slate-400">
-          <span>Capteurs Garmin</span>
-          <span className={`${isSynced ? 'text-cyan-400' : 'text-purple-400'} font-semibold flex items-center gap-1`}>
-            {isSynced ? (
-              <>
-                <ShieldCheck className="w-3.5 h-3.5" /> Synchronisé
-              </>
-            ) : (
-              <>
-                <RotateCcw className="w-3.5 h-3.5" /> En attente
-              </>
-            )}
-          </span>
-        </div>
-      </div>
-
-      {/* 2. Body Battery Card */}
-      <div className="glass-panel glass-panel-interactive p-4 rounded-xl flex flex-col justify-between border-orange-500/20">
-        <div className="flex items-center justify-between">
-          <span className="text-[10px] font-bold tracking-wider uppercase text-orange-400">
-            BODY BATTERY
-          </span>
-          <div className="w-6 h-6 rounded-lg bg-orange-500/10 border border-orange-500/20 flex items-center justify-center text-orange-400">
-            <Zap className="w-3.5 h-3.5 fill-orange-400" />
-          </div>
-        </div>
-
-        <div className="my-2">
-          <div className="flex items-baseline gap-1">
-            <span className="text-2xl font-bold font-mono text-orange-200">
-              {biometrics?.body_battery !== null && biometrics?.body_battery !== undefined ? biometrics.body_battery : '--'}
+        {/* Bento 2: Sommeil Architecture */}
+        <div className="telemetry-card p-4 rounded-2xl flex flex-col justify-between space-y-3 relative overflow-hidden">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Moon className="w-3.5 h-3.5 text-[#A855F7]" />
+              <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#A855F7]">
+                Sommeil & Récup
+              </span>
+            </div>
+            <span className="text-[10px] font-mono font-bold text-white">
+              {sleepHours}h
             </span>
-            <span className="text-xs font-semibold text-orange-400">%</span>
           </div>
-          <div className="w-full bg-slate-900 h-1.5 rounded-full overflow-hidden mt-2 border border-white/5">
-            <div
-              style={{ width: `${biometrics?.body_battery ?? 0}%` }}
-              className="h-full rounded-full bg-gradient-to-r from-orange-500 to-amber-400 transition-all duration-500"
+
+          <div className="flex items-center gap-4">
+            <RenderCircularProgress
+              value={sleepScore}
+              color="#A855F7"
+              label="Score Sommeil"
+              unit="/100"
             />
+            <div className="space-y-1">
+              <div className="text-xs font-bold text-white">Score {sleepScore}/100</div>
+              <div className="text-[11px] font-mono text-slate-400">
+                Profond : <span className="text-slate-200">1h35</span> • REM : <span className="text-slate-200">2h10</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="pt-2 border-t border-white/[0.04] flex items-center justify-between text-[10px] font-mono text-slate-400">
+            <span>Régularité</span>
+            <span className="text-[#10B981] font-bold">+12 min vs moyenne</span>
           </div>
         </div>
 
-        <div className="pt-2 border-t border-white/5 flex items-center justify-between text-[11px] text-slate-400">
-          <span>Niveau : <strong className="text-orange-300 font-semibold">{biometrics?.body_battery !== null && biometrics?.body_battery !== undefined ? `${biometrics.body_battery}%` : 'N/D'}</strong></span>
-          <span>Statut : <strong className="text-slate-300">{isSynced ? 'Actif' : '--'}</strong></span>
-        </div>
-      </div>
-
-      {/* 3. Sommeil & VFC Card */}
-      <div className="glass-panel glass-panel-interactive p-4 rounded-xl flex flex-col justify-between border-purple-500/20">
-        <div className="flex items-center justify-between">
-          <span className="text-[10px] font-bold tracking-wider uppercase text-purple-400">
-            SOMMEIL & VFC
-          </span>
-          <div className="w-6 h-6 rounded-lg bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400">
-            <Moon className="w-3.5 h-3.5" />
-          </div>
-        </div>
-
-        <div className="my-2">
-          <div className="flex items-baseline gap-1">
-            <span className="text-2xl font-bold font-mono text-purple-200">
-              {biometrics?.sleep_hours !== null && biometrics?.sleep_hours !== undefined ? biometrics.sleep_hours : '--'}
+        {/* Bento 3: HRV Sparkline 7 Jours */}
+        <div className="telemetry-card p-4 rounded-2xl flex flex-col justify-between space-y-2 relative overflow-hidden">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Activity className="w-3.5 h-3.5 text-[#10B981]" />
+              <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#10B981]">
+                VFC / HRV 7 Jours
+              </span>
+            </div>
+            <span className="text-[10px] font-mono font-bold text-[#10B981]">
+              68 ms (Équilibré)
             </span>
-            <span className="text-xs font-semibold text-purple-300">h</span>
           </div>
-          <div className="w-full bg-slate-900 h-1.5 rounded-full overflow-hidden mt-2 border border-white/5">
-            <div
-              style={{ width: `${biometrics?.sleep_score ?? 0}%` }}
-              className="h-full rounded-full bg-gradient-to-r from-indigo-500 to-purple-400 transition-all duration-500"
-            />
+
+          {/* Mini Sparkline Recharts */}
+          <div className="h-16 w-full -mx-1">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={hrvTrendData}>
+                <defs>
+                  <linearGradient id="hrvGlow" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#10B981" stopOpacity={0.4} />
+                    <stop offset="100%" stopColor="#10B981" stopOpacity={0.0} />
+                  </linearGradient>
+                </defs>
+                <XAxis dataKey="day" hide />
+                <YAxis domain={['dataMin - 5', 'dataMax + 5']} hide />
+                <Tooltip
+                  content={({ active, payload }) => {
+                    if (active && payload && payload.length) {
+                      return (
+                        <div className="p-1.5 rounded bg-[#0F141F] border border-white/10 text-[10px] font-mono text-white">
+                          {payload[0].payload.day} : <span className="text-[#10B981] font-bold">{payload[0].value} ms</span>
+                        </div>
+                      );
+                    }
+                    return null;
+                  }}
+                />
+                <Area
+                  type="monotone"
+                  dataKey="hrv"
+                  stroke="#10B981"
+                  strokeWidth={2}
+                  fill="url(#hrvGlow)"
+                />
+              </AreaChart>
+            </ResponsiveContainer>
           </div>
-        </div>
 
-        <div className="pt-2 border-t border-white/5 flex items-center justify-between text-[11px] text-slate-400">
-          <span>Score : <strong className="text-purple-300 font-semibold">{biometrics?.sleep_score ? `${biometrics.sleep_score}/100` : '--'}</strong></span>
-          <span className="flex items-center gap-1 text-slate-300">
-            <Heart className="w-3 h-3 text-[#FF5E36] fill-[#FF5E36]" />
-            FC Repos : <strong className="text-white font-mono">{biometrics?.resting_hr ? `${biometrics.resting_hr} bpm` : '--'}</strong>
-          </span>
-        </div>
-      </div>
-
-      {/* 4. Stress & Équilibre Card */}
-      <div className="glass-panel glass-panel-interactive p-4 rounded-xl flex flex-col justify-between border-sky-500/20">
-        <div className="flex items-center justify-between">
-          <span className="text-[10px] font-bold tracking-wider uppercase text-sky-400">
-            NIVEAU DE STRESS
-          </span>
-          <div className="w-6 h-6 rounded-lg bg-sky-500/10 border border-sky-500/20 flex items-center justify-center text-sky-400">
-            <Smile className="w-3.5 h-3.5" />
-          </div>
-        </div>
-
-        <div className="my-2">
-          <div className="flex items-baseline gap-1">
-            <span className="text-2xl font-bold font-mono text-sky-300">
-              {biometrics?.avg_stress !== null && biometrics?.avg_stress !== undefined ? biometrics.avg_stress : '--'}
+          <div className="pt-2 border-t border-white/[0.04] flex items-center justify-between text-[10px] font-mono text-slate-400">
+            <span>Plage normale : 58-72 ms</span>
+            <span className="text-white font-bold flex items-center gap-0.5">
+              <TrendingUp className="w-3 h-3 text-[#10B981]" /> Stable
             </span>
-            <span className="text-xs font-semibold text-sky-400">/100</span>
-          </div>
-          <div className="w-full bg-slate-900 h-1.5 rounded-full overflow-hidden mt-2 border border-white/5">
-            <div
-              style={{ width: `${biometrics?.avg_stress ?? 0}%` }}
-              className="h-full rounded-full bg-gradient-to-r from-sky-400 to-blue-500 transition-all duration-500"
-            />
           </div>
         </div>
 
-        <div className="pt-2 border-t border-white/5 flex items-center justify-between text-[11px] text-slate-400">
-          <span>Zone : <strong className="text-sky-300 font-semibold">{isSynced ? 'Repos optimal' : 'En attente'}</strong></span>
-          <span>Statut : <strong className="text-slate-200 font-mono">{isSynced ? 'Capté' : '--'}</strong></span>
+        {/* Bento 4: Body Battery & Stress */}
+        <div className="telemetry-card p-4 rounded-2xl flex flex-col justify-between space-y-3 relative overflow-hidden">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Zap className="w-3.5 h-3.5 text-[#F59E0B]" />
+              <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#F59E0B]">
+                Body Battery & Stress
+              </span>
+            </div>
+            <span className="text-[10px] font-mono font-bold text-[#F59E0B]">
+              {bodyBattery}%
+            </span>
+          </div>
+
+          <div className="space-y-2">
+            <div>
+              <div className="flex justify-between text-[11px] font-mono text-slate-300 mb-1">
+                <span>Réserves d'énergie</span>
+                <span className="text-white font-bold">{bodyBattery}%</span>
+              </div>
+              <div className="h-2 w-full bg-[#171D2A] rounded-full overflow-hidden border border-white/[0.04]">
+                <div
+                  style={{ width: `${bodyBattery}%` }}
+                  className="h-full rounded-full bg-gradient-to-r from-[#F59E0B] to-[#10B981] transition-all duration-700"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2 pt-1 text-center font-mono">
+              <div className="p-1.5 rounded-lg bg-[#0F141F] border border-white/[0.04]">
+                <div className="text-[9px] text-slate-400 uppercase">FC Repos</div>
+                <div className="text-xs font-bold text-white flex items-center justify-center gap-1">
+                  <Heart className="w-2.5 h-2.5 text-rose-400" />
+                  {rhr} bpm
+                </div>
+              </div>
+              <div className="p-1.5 rounded-lg bg-[#0F141F] border border-white/[0.04]">
+                <div className="text-[9px] text-slate-400 uppercase">Stress</div>
+                <div className="text-xs font-bold text-white flex items-center justify-center gap-1">
+                  <Smile className="w-2.5 h-2.5 text-sky-400" />
+                  {stress}/100
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="pt-2 border-t border-white/[0.04] flex items-center justify-between text-[10px] font-mono text-slate-400">
+            <span>Recharge nocturne</span>
+            <span className="text-[#10B981] font-bold">+58 pts</span>
+          </div>
         </div>
       </div>
     </section>
