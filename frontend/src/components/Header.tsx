@@ -1,9 +1,7 @@
 import React from 'react';
 import {
-  Zap,
   Brain,
-  HeartHandshake,
-  Activity,
+  Radio,
 } from 'lucide-react';
 import type { AthleteStatus, AthleteId } from '../types';
 
@@ -30,128 +28,123 @@ export const Header: React.FC<HeaderProps> = ({
     ? 'Clara'
     : (status?.athlete_name || 'Louis Poutrain');
 
-  const goalText = isDuo
-    ? "Duo : Louis < 40' & Clara < 50'"
+  const goalBadge = isDuo
+    ? "SUB-40 & SUB-50"
     : isClara
-    ? 'Cible 10 km < 50 min'
-    : (status?.primary_goal ? "Cible 10 km < 40 min" : 'Endurance & VO2 Max');
+    ? 'SUB-50 (4:59/KM)'
+    : 'SUB-40 (3:59/KM)';
 
   return (
-    <header className="mb-5">
-      <div className="telemetry-card rounded-2xl px-4 py-3 flex flex-wrap items-center justify-between gap-3 text-slate-200">
-        {/* Brand */}
+    <header className="mb-4">
+      <div className="bg-[#0B0F19] border border-white/[0.05] rounded-2xl px-4 py-3 flex flex-wrap items-center justify-between gap-3">
+        {/* Brand / F1 Pit Wall Style */}
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-[#171D2A] border border-white/[0.08] flex items-center justify-center text-[#00A7E1] shadow-[0_0_12px_rgba(0,167,225,0.2)]">
-            {isDuo ? (
-              <HeartHandshake className="w-4 h-4 text-[#F59E0B]" />
-            ) : isClara ? (
-              <Activity className="w-4 h-4 text-[#F43F5E]" />
-            ) : (
-              <Zap className="w-4 h-4 text-[#00A7E1] fill-[#00A7E1]" />
-            )}
+          <div className="w-8 h-8 rounded-lg bg-[#04070D] border border-white/[0.06] flex items-center justify-center text-[#00E5FF] shadow-[0_0_12px_rgba(0,229,255,0.15)] flex-shrink-0">
+            <Radio className="w-4 h-4 text-[#00E5FF] animate-pulse" />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="text-sm font-bold tracking-tight text-white font-mono">
-                GARMIN{' '}
-                <span className={isDuo ? 'text-[#F59E0B]' : isClara ? 'text-[#F43F5E]' : 'text-[#00A7E1]'}>
-                  {isDuo ? 'DUO TELEMETRY' : isClara ? 'CLARA TELEMETRY' : 'LOUIS TELEMETRY'}
+              <h1 className="text-xs sm:text-sm font-bold tracking-tight text-white font-mono flex items-center gap-1.5">
+                <span>PIT WALL</span>
+                <span className="text-zinc-600">•</span>
+                <span className={isDuo ? 'text-amber-400' : isClara ? 'text-[#FB7185]' : 'text-[#00E5FF]'}>
+                  {isDuo ? 'DUO TELEMETRY' : isClara ? 'CLARA 10K' : 'LOUIS 10K'}
                 </span>
               </h1>
-              <span className="text-[9px] font-mono uppercase font-bold tracking-wider px-1.5 py-0.2 rounded bg-[#171D2A] text-slate-400 border border-white/[0.08]">
-                {isDuo ? 'DUO 10K PRO' : 'POLARISÉ 80/20'}
+              <span className="text-[10px] font-mono uppercase tracking-[0.18em] px-1.5 py-0.5 rounded border border-white/[0.06] bg-white/[0.02] text-zinc-400">
+                80/20 POLARIZED
               </span>
             </div>
-            <p className="text-[11px] font-mono text-slate-400">
-              {isDuo ? 'Télémétrie d’entraînement du couple • Sciences du Sport' : 'Préparation 10 km & Entraînement Polarisé'}
+            <p className="text-[11px] font-mono uppercase tracking-[0.2em] text-zinc-500 font-semibold mt-0.5">
+              McLAREN & WHOOP TELEMETRY PROTOCOL
             </p>
           </div>
         </div>
 
-        {/* Athlete Switcher (Segmented Control) */}
-        <div className="flex items-center p-0.5 rounded-xl bg-[#0B0E14] border border-white/[0.08] gap-1 font-mono">
+        {/* Athlete Switcher (Geist / Raycast Minimalist Segmented Control) */}
+        <div className="flex items-center p-1 rounded-xl bg-[#04070D] border border-white/[0.05] gap-1 font-mono text-xs">
           <button
             type="button"
             onClick={() => onSelectAthlete('duo')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+            className={`px-3 py-1.5 rounded-lg font-medium transition-all flex items-center gap-1.5 ${
               currentAthlete === 'duo'
-                ? 'bg-[#F59E0B] text-slate-950 font-bold shadow-md shadow-[#F59E0B]/20'
-                : 'text-slate-400 hover:text-white hover:bg-white/[0.04]'
+                ? 'border border-amber-400/30 text-amber-300 bg-amber-400/10 shadow-[0_0_12px_rgba(245,158,11,0.15)]'
+                : 'text-zinc-400 hover:text-white hover:bg-white/[0.03]'
             }`}
           >
-            <span>🤝</span>
-            <span>Duo</span>
+            <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
+            <span>DUO SPLIT</span>
           </button>
+
           <button
             type="button"
             onClick={() => onSelectAthlete('louis')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+            className={`px-3 py-1.5 rounded-lg font-medium transition-all flex items-center gap-1.5 ${
               currentAthlete === 'louis'
-                ? 'bg-[#00A7E1] text-white font-bold shadow-md shadow-[#00A7E1]/20'
-                : 'text-slate-400 hover:text-white hover:bg-white/[0.04]'
+                ? 'border border-[#00E5FF]/30 text-[#00E5FF] bg-[#00E5FF]/10 shadow-[0_0_12px_rgba(0,229,255,0.15)]'
+                : 'text-zinc-400 hover:text-white hover:bg-white/[0.03]'
             }`}
           >
-            <span>🏃‍♂️</span>
-            <span>Louis</span>
+            <span className="w-1.5 h-1.5 rounded-full bg-[#00E5FF]" />
+            <span>LOUIS</span>
           </button>
+
           <button
             type="button"
             onClick={() => onSelectAthlete('clara')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+            className={`px-3 py-1.5 rounded-lg font-medium transition-all flex items-center gap-1.5 ${
               currentAthlete === 'clara'
-                ? 'bg-[#F43F5E] text-white font-bold shadow-md shadow-[#F43F5E]/20'
-                : 'text-slate-400 hover:text-white hover:bg-white/[0.04]'
+                ? 'border border-[#FB7185]/30 text-[#FB7185] bg-[#FB7185]/10 shadow-[0_0_12px_rgba(251,113,133,0.15)]'
+                : 'text-zinc-400 hover:text-white hover:bg-white/[0.03]'
             }`}
           >
-            <span>🏃‍♀️</span>
-            <span>Clara</span>
+            <span className="w-1.5 h-1.5 rounded-full bg-[#FB7185]" />
+            <span>CLARA</span>
           </button>
         </div>
 
-        {/* Status, Profile & Memory Action */}
+        {/* Live Feed & Ghost Actions */}
         <div className="flex items-center gap-2.5 font-mono">
-          {/* Garmin Status Pill */}
-          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium bg-[#171D2A] border border-white/[0.06]">
+          {/* Garmin Live Status */}
+          <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-[#04070D] border border-white/[0.05]">
             <span
-              className={`w-2 h-2 rounded-full ${
-                status?.garmin_connected ? 'bg-[#10B981] animate-pulse' : 'bg-[#F59E0B]'
+              className={`w-1.5 h-1.5 rounded-full ${
+                status?.garmin_connected ? 'bg-[#10B981] shadow-[0_0_8px_#10B981]' : 'bg-amber-400'
               }`}
             />
-            <span className="text-[11px] text-slate-300">
+            <span className="text-[10px] uppercase tracking-[0.18em] text-zinc-400 font-semibold">
               {isDuo
                 ? status?.both_connected
-                  ? '2 montres connectées'
-                  : 'Garmin connecté'
+                  ? 'DUAL TELEMETRY LIVE'
+                  : 'GARMIN SYNCED'
                 : status?.garmin_connected
-                ? 'Garmin Live'
-                : 'Hors ligne'}
+                ? 'TELEMETRY LIVE'
+                : 'OFFLINE'}
             </span>
           </div>
 
-          {/* Athlete Profile Goal */}
-          <div className="hidden lg:flex flex-col text-right pl-2 border-l border-white/[0.08]">
-            <span className="text-xs font-bold text-white">{athleteName}</span>
-            <span
-              className={`text-[10px] font-medium ${
-                isDuo ? 'text-[#F59E0B]' : isClara ? 'text-[#F43F5E]' : 'text-[#00A7E1]'
-              }`}
-            >
-              {goalText}
+          {/* Goal pill */}
+          <div className="hidden xl:flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[#04070D] border border-white/[0.05] text-[10px] tracking-[0.15em] uppercase font-bold text-zinc-300">
+            <span className="text-zinc-500">{athleteName} :</span>
+            <span className={isDuo ? 'text-amber-400' : isClara ? 'text-[#FB7185]' : 'text-[#00E5FF]'}>
+              {goalBadge}
             </span>
           </div>
 
-          {/* Memory & Profile Button */}
+          {/* Ghost Memory Button */}
           <button
             type="button"
             onClick={onOpenMemory}
-            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-[#171D2A] hover:bg-[#1E2638] text-slate-300 hover:text-white border border-white/[0.08] transition-colors"
-            title="Consulter le profil et la mémoire adaptative du coach"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono font-medium text-zinc-400 hover:text-white bg-[#04070D] hover:bg-white/[0.04] border border-white/[0.05] hover:border-white/[0.1] transition-all"
+            title="Consulter la mémoire adaptative du coach"
           >
-            <Brain className="w-3.5 h-3.5 text-[#00A7E1]" />
-            <span className="hidden sm:inline">Mémoire & Profil</span>
+            <Brain className="w-3.5 h-3.5 text-[#00E5FF]" />
+            <span className="hidden sm:inline text-[11px] uppercase tracking-[0.15em]">Mémoire</span>
           </button>
         </div>
       </div>
     </header>
   );
 };
+
+export default Header;

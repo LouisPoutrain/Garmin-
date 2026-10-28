@@ -6,15 +6,15 @@
     --font-body: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
     --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
 
-    --bg-telemetry: #0B0E14;
-    --card-surface: #121722;
-    --card-subtle: #171D2A;
-    --card-border: rgba(255, 255, 255, 0.07);
+    --bg-telemetry: #04070D;
+    --card-surface: #0B0F19;
+    --card-subtle: #080C14;
+    --card-border: rgba(255, 255, 255, 0.05);
 
-    --athlete-cyan: #00A7E1;
-    --athlete-cyan-glow: rgba(0, 167, 225, 0.25);
-    --athlete-coral: #F43F5E;
-    --athlete-coral-glow: rgba(244, 63, 94, 0.25);
+    --athlete-cyan: #00E5FF;
+    --athlete-cyan-glow: rgba(0, 229, 255, 0.2);
+    --athlete-coral: #FB7185;
+    --athlete-coral-glow: rgba(251, 113, 133, 0.2);
     --athlete-violet: #A855F7;
     --metric-emerald: #10B981;
     --metric-amber: #F59E0B;
@@ -69,14 +69,14 @@
 
 /* Telemetry Card & Surface System */
 .telemetry-card, .matte-card {
-  background-color: #121722;
-  border: 1px solid rgba(255, 255, 255, 0.07);
-  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.5);
+  background-color: #0B0F19;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: 0 4px 24px -4px rgba(0, 0, 0, 0.6);
 }
 
 .telemetry-card-subtle, .matte-card-subtle {
-  background-color: #171D2A;
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  background-color: #080C14;
+  border: 1px solid rgba(255, 255, 255, 0.04);
 }
 
 .matte-card-hover {
@@ -84,8 +84,8 @@
 }
 
 .matte-card-hover:hover {
-  border-color: rgba(255, 255, 255, 0.15);
-  background-color: #151C2C;
+  border-color: rgba(255, 255, 255, 0.12);
+  background-color: #0E1422;
 }
 
 /* Telemetry Glow Accents */

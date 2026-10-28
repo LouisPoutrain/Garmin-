@@ -1,6 +1,5 @@
 import React from 'react';
-import { motion } from 'motion/react';
-import { Target, Flag, Trophy, TrendingUp, Sparkles } from 'lucide-react';
+import { Target, Flag, Trophy, TrendingUp, ArrowRight } from 'lucide-react';
 import type { GoalProgression } from '../types';
 import { Skeleton } from './Skeleton';
 
@@ -16,128 +15,115 @@ export const GoalProgressionCard: React.FC<GoalProgressionCardProps> = ({
   onSelectActivity,
 }) => {
   if (loading && !progression) {
-    return <Skeleton className="h-48 rounded-2xl mb-4" />;
+    return <Skeleton className="h-44 rounded-2xl mb-4" />;
   }
 
   const prog = progression || {
     goal_title: 'Passer sous les 40 min au 10 km',
-    target_deadline: '6 mois (Avril 2027)',
+    target_deadline: '6 mois (18 Avril 2027)',
     target_time: '39:59',
-    target_pace: '3:59 min/km (15.0 km/h)',
+    target_pace: '3:59 min/km',
     current_pr: '43:34 (Chinon)',
     current_pace: '4:21 min/km',
     delta_seconds: 215,
-    delta_text: '-3 min 35 s (-21 s / km)',
-    progress_percent: 80,
+    delta_text: "-3'35\" (-21s/km)",
+    progress_percent: 82,
     weekly_hybrid: '3 séances Ultimate + 2 séances Running clés',
     next_milestone: 'Palier 1 : 41:59 (4:12 min/km)',
   };
 
   return (
-    <div className="bg-[#0E1320] p-4 rounded-2xl mb-4 relative border border-white/[0.08] shadow-sm">
-
-      {/* Card Header */}
-      <div className="flex items-center justify-between gap-3 mb-3">
-        <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-[#FF5E36] to-[#E11D48] flex items-center justify-center text-white font-black shadow-md shadow-[#FF5E36]/20">
-            <Target className="w-4 h-4 stroke-[2.2]" />
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <h3 className="text-sm font-black text-white tracking-tight">
-                {prog.goal_title}
-              </h3>
-              <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded-full bg-[#FF5E36]/15 text-[#FF7854] border border-[#FF5E36]/30">
-                Objectif Clé
-              </span>
-            </div>
-            <p className="text-[11px] text-slate-400">
-              Échéance : <span className="text-slate-200 font-semibold">{prog.target_deadline}</span> • Allure : <span className="text-[#FF7854] font-semibold">{prog.target_pace}</span>
-            </p>
-          </div>
+    <div className="bg-[#0B0F19] border border-white/[0.05] rounded-2xl p-4 sm:p-5 mb-4 relative overflow-hidden">
+      {/* Telemetry Header */}
+      <div className="flex items-center justify-between gap-3 pb-3 border-b border-white/[0.05]">
+        <div className="flex items-center gap-2">
+          <span className="text-[11px] uppercase tracking-[0.2em] text-zinc-500 font-semibold font-mono flex items-center gap-1.5">
+            <Target className="w-3.5 h-3.5 text-[#00E5FF]" />
+            TÉLÉMÉTRIE D'OBJECTIF • 10 KM SUB-40
+          </span>
+          <span className="text-[9px] font-mono uppercase tracking-[0.18em] px-2 py-0.5 rounded border border-white/[0.06] bg-white/[0.02] text-zinc-400">
+            J-171
+          </span>
+        </div>
+        <div className="text-[11px] font-mono text-zinc-500">
+          ÉCHÉANCE : <span className="text-zinc-300 font-bold">{prog.target_deadline}</span>
         </div>
       </div>
 
-      {/* Chrono Comparison Dual Pill */}
-      <div className="grid grid-cols-2 gap-2.5 my-3 p-2.5 rounded-xl bg-slate-950/70 border border-white/5">
+      {/* Dual Metrics Telemetry Box */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 my-3">
+        {/* Current PR Box */}
         <div
-          onClick={() => {
-            if (prog.current_pr.includes('Chinon')) {
-              onSelectActivity?.(22496284245);
-            }
-          }}
-          className={`flex flex-col p-1.5 -m-1.5 rounded-lg transition-colors group ${
-            prog.current_pr.includes('Chinon') ? 'cursor-pointer hover:bg-cyan-500/10' : ''
-          }`}
-          title={prog.current_pr.includes('Chinon') ? "Cliquer pour afficher les splits et le cardio complets de ce record" : undefined}
+          onClick={() => onSelectActivity?.(22496284245)}
+          className="p-3.5 rounded-xl bg-[#04070D] border-l-2 border-[#00E5FF] border-r border-t border-b border-white/[0.03] cursor-pointer hover:bg-white/[0.02] transition-colors group"
         >
           <div className="flex items-center justify-between">
-            <span className="text-[10px] uppercase font-bold tracking-wider text-cyan-400 flex items-center gap-1">
-              <Trophy className="w-3 h-3 text-cyan-400" /> Record Actuel (PR)
+            <span className="text-[11px] uppercase tracking-[0.2em] text-zinc-500 font-semibold font-mono flex items-center gap-1">
+              <Trophy className="w-3.5 h-3.5 text-[#00E5FF]" />
+              RECORD OFFICIEL (PR)
             </span>
-            {prog.current_pr.includes('Chinon') && (
-              <span className="text-[9px] text-cyan-400/80 group-hover:text-cyan-300 font-bold flex items-center gap-0.5">
-                Splits →
-              </span>
-            )}
-          </div>
-          <div className="flex items-baseline gap-1 mt-0.5">
-            <span className="text-xl font-black font-mono text-cyan-300 tracking-tight group-hover:scale-105 transition-transform">
-              {prog.current_pr.split(' ')[0]}
-            </span>
-            <span className="text-[11px] font-mono text-cyan-400/90 font-bold">
-              {prog.current_pace}
+            <span className="text-[10px] font-mono text-[#00E5FF] flex items-center gap-1 group-hover:translate-x-0.5 transition-transform">
+              Splits Chinon <ArrowRight className="w-3 h-3" />
             </span>
           </div>
-          <span className="text-[10px] text-slate-400 truncate">
-            {prog.current_pr.includes('Chinon') ? 'Chinon (12/04/2026)' : 'Objectif en cours'}
-          </span>
+
+          <div className="flex items-baseline gap-2 mt-1">
+            <span className="font-mono text-3xl sm:text-4xl tracking-tight text-white font-bold">
+              43:34
+            </span>
+            <span className="text-xs font-mono text-zinc-500 uppercase">
+              4:21 MIN/KM
+            </span>
+          </div>
+
+          <div className="text-[11px] font-mono text-zinc-500 mt-1">
+            10.03 km • 12 Avril 2026 à Chinon
+          </div>
         </div>
 
-        <div className="flex flex-col border-l border-white/10 pl-3">
-          <span className="text-[10px] uppercase font-bold tracking-wider text-[#FF7854] flex items-center gap-1">
-            <Flag className="w-3 h-3 text-[#FF5E36]" /> Cible Chrono
-          </span>
-          <div className="flex items-baseline gap-1 mt-0.5">
-            <span className="text-xl font-black font-mono text-orange-300 tracking-tight">
-              {prog.target_time}
+        {/* Target Box */}
+        <div className="p-3.5 rounded-xl bg-[#04070D] border-l-2 border-[#FB7185] border-r border-t border-b border-white/[0.03]">
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] uppercase tracking-[0.2em] text-zinc-500 font-semibold font-mono flex items-center gap-1">
+              <Flag className="w-3.5 h-3.5 text-[#FB7185]" />
+              CIBLE CHRONOMÉTRIQUE
             </span>
-            <span className="text-[11px] font-mono text-orange-400/90 font-bold">
-              {prog.target_pace}
+            <span className="px-2 py-0.5 rounded border border-[#FB7185]/30 text-[#FB7185] bg-[#FB7185]/10 text-[9px] font-mono font-bold tracking-[0.18em]">
+              OBJECTIF
             </span>
           </div>
-          <span className="text-[10px] text-amber-300 font-bold flex items-center gap-1">
+
+          <div className="flex items-baseline gap-2 mt-1">
+            <span className="font-mono text-3xl sm:text-4xl tracking-tight text-white font-bold">
+              39:59
+            </span>
+            <span className="text-xs font-mono text-zinc-500 uppercase">
+              3:59 MIN/KM
+            </span>
+          </div>
+
+          <div className="text-[11px] font-mono text-emerald-400 mt-1 flex items-center gap-1">
             <TrendingUp className="w-3 h-3" />
-            {prog.delta_text}
-          </span>
+            <span>Delta : {prog.delta_text}</span>
+          </div>
         </div>
       </div>
 
-      {/* Visual Progression Timeline */}
-      <div className="space-y-1.5 mt-3">
-        <div className="flex justify-between text-[10px] font-mono font-bold text-slate-400">
-          <span>Départ</span>
-          <span className="text-cyan-400">Actuel ({prog.current_pace})</span>
-          <span className="text-[#FF7854]">Cible ({prog.target_pace})</span>
+      {/* Progress Track */}
+      <div className="pt-2">
+        <div className="flex justify-between text-[11px] font-mono text-zinc-500 pb-1">
+          <span>PROGRESSION GLOBALE DU PLAN</span>
+          <span className="text-white font-bold">{prog.progress_percent}%</span>
         </div>
-        <div className="w-full h-2.5 bg-slate-950 rounded-full overflow-hidden p-[2px] border border-white/10">
-          <motion.div
-            initial={{ width: 0 }}
-            animate={{ width: `${prog.progress_percent}%` }}
-            transition={{ duration: 1.2, ease: 'easeOut' }}
-            className="h-full rounded-full bg-gradient-to-r from-cyan-400 via-indigo-500 to-rose-500 shadow-[0_0_15px_rgba(244,63,94,0.5)]"
+        <div className="h-1.5 w-full bg-white/[0.04] rounded-full overflow-hidden">
+          <div
+            style={{ width: `${prog.progress_percent}%` }}
+            className="h-full rounded-full bg-gradient-to-r from-[#00E5FF] to-[#FB7185]"
           />
-        </div>
-        <div className="flex items-center justify-between text-[11px] pt-1">
-          <span className="text-slate-300 text-[10.5px]">
-            Progression : <strong className="text-white font-mono font-bold">{prog.progress_percent}%</strong>
-          </span>
-          <span className="text-amber-300 text-[10.5px] font-bold flex items-center gap-1">
-            <Sparkles className="w-3 h-3 text-amber-400" />
-            {prog.next_milestone}
-          </span>
         </div>
       </div>
     </div>
   );
 };
+
+export default GoalProgressionCard;

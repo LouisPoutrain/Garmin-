@@ -1,5 +1,5 @@
 import React from 'react';
-import { Watch, Sliders, Check, HeartHandshake } from 'lucide-react';
+import { Watch, Sliders, Check } from 'lucide-react';
 import type { DayPlan } from '../types';
 
 interface TodayActionCardProps {
@@ -24,58 +24,55 @@ export const TodayActionCard: React.FC<TodayActionCardProps> = ({
   const isScheduled = !!todaySession.garmin_scheduled;
   const isCompleted = todaySession.status === 'completed' || todaySession.status === 'completed_manual';
 
-  const icon =
-    todaySession.sport_icon ||
-    (isUltimate ? '🥏' : isRunning ? '🏃‍♂️' : isRest ? '🧘' : '⚡');
-
-  // Helper for single athlete action buttons
-  const renderActions = (day: DayPlan, athleteKey: 'louis' | 'clara') => {
+  // Helper for single athlete ghost / border actions
+  const renderDiscreetActions = (day: DayPlan, athleteKey: 'louis' | 'clara') => {
     const isRun = day.sport === 'running';
     const isUlt = day.sport === 'ultimate';
     const isDone = day.status === 'completed' || day.status === 'completed_manual';
     const isSched = !!day.garmin_scheduled;
     const isOff = day.sport === 'recovery' || (day.type?.toLowerCase().includes('repos') ?? false);
+    const accentBorder = athleteKey === 'louis' ? 'border-[#00E5FF]/30 text-[#00E5FF] hover:bg-[#00E5FF]/10' : 'border-[#FB7185]/30 text-[#FB7185] hover:bg-[#FB7185]/10';
 
     if (isDone) {
       return (
-        <span className="px-3 py-1.5 rounded-xl bg-[#10B981]/15 border border-[#10B981]/30 text-[#10B981] text-xs font-mono font-bold flex items-center gap-1.5">
-          <Check className="w-3.5 h-3.5 text-[#10B981]" />
-          FAIT
+        <span className="px-3 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-mono font-bold flex items-center gap-1.5">
+          <Check className="w-3.5 h-3.5 text-emerald-400" />
+          TERMINÉ
         </span>
       );
     }
 
     if (isOff) {
       return (
-        <span className="px-3 py-1.5 rounded-xl bg-slate-800/80 border border-white/[0.08] text-slate-400 text-xs font-mono font-bold">
-          REPOS
+        <span className="px-3 py-1.5 rounded-lg bg-white/[0.02] border border-white/[0.05] text-zinc-500 text-xs font-mono font-bold tracking-wider">
+          REPOS ACTIF
         </span>
       );
     }
 
     if (isRun) {
       return isSched ? (
-        <span className="px-3 py-1.5 rounded-xl bg-[#00A7E1]/15 border border-[#00A7E1]/30 text-[#00A7E1] text-xs font-mono font-bold flex items-center gap-1.5">
+        <span className="px-3 py-1.5 rounded-lg bg-[#00E5FF]/10 border border-[#00E5FF]/30 text-[#00E5FF] text-xs font-mono font-bold flex items-center gap-1.5">
           <Watch className="w-3.5 h-3.5" />
           MONTRE OK
         </span>
       ) : (
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-2">
           <button
+            type="button"
             onClick={() => onOpenCustomizer(day)}
-            className="p-2 rounded-xl bg-[#171D2A] border border-white/[0.08] hover:border-[#00A7E1]/40 text-slate-300 hover:text-[#00A7E1] transition-colors"
-            title="Personnaliser les allures ou intervalles"
+            className="p-2 rounded-lg bg-[#04070D] border border-white/[0.06] hover:border-white/20 text-zinc-400 hover:text-white transition-colors"
+            title="Ajuster allures ou intervalles"
           >
             <Sliders className="w-3.5 h-3.5" />
           </button>
           <button
+            type="button"
             onClick={() => onScheduleWorkout(day, athleteKey)}
-            className={`px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all ${
-              athleteKey === 'louis' ? 'btn-telemetry-cyan' : 'btn-telemetry-coral'
-            }`}
+            className={`px-3.5 py-1.5 rounded-lg bg-[#04070D] border ${accentBorder} text-xs font-mono font-semibold flex items-center gap-1.5 transition-all hover:text-white`}
           >
             <Watch className="w-3.5 h-3.5" />
-            Programmer
+            <span>Programmer</span>
           </button>
         </div>
       );
@@ -84,11 +81,12 @@ export const TodayActionCard: React.FC<TodayActionCardProps> = ({
     if (isUlt) {
       return (
         <button
+          type="button"
           onClick={() => onOpenManualModal(day)}
-          className="px-3 py-1.5 rounded-xl bg-[#00A7E1]/15 hover:bg-[#00A7E1]/25 border border-[#00A7E1]/30 text-[#00A7E1] text-xs font-bold transition-all flex items-center gap-1.5"
+          className="px-3.5 py-1.5 rounded-lg bg-[#04070D] border border-[#00E5FF]/30 hover:bg-[#00E5FF]/10 text-[#00E5FF] hover:text-white text-xs font-mono font-semibold flex items-center gap-1.5 transition-all"
         >
           <Check className="w-3.5 h-3.5" />
-          Valider fait
+          <span>Valider fait</span>
         </button>
       );
     }
@@ -97,173 +95,219 @@ export const TodayActionCard: React.FC<TodayActionCardProps> = ({
   };
 
   return (
-    <div className="p-4 sm:p-5 rounded-2xl bg-[#121722] border border-[#00A7E1]/30 shadow-[0_0_25px_rgba(0,167,225,0.12)] relative text-slate-200">
+    <div className="bg-[#0B0F19] border border-white/[0.05] rounded-2xl p-4 sm:p-5 mb-5 relative overflow-hidden">
+      {/* Telemetry Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3.5 border-b border-white/[0.05]">
+        <div className="flex items-center gap-2.5">
+          <div className="w-2.5 h-2.5 rounded-full bg-emerald-400 shadow-[0_0_8px_#10B981] animate-pulse" />
+          <span className="text-[11px] uppercase tracking-[0.2em] text-zinc-500 font-semibold font-mono">
+            SÉANCE DU JOUR • LIVE TELEMETRY
+          </span>
+          <span className="text-[10px] font-mono text-zinc-400 px-2 py-0.5 rounded border border-white/[0.06] bg-white/[0.02]">
+            {todaySession.date_formatted || todaySession.date_short || 'AUJOURD’HUI'}
+          </span>
+        </div>
+
+        {todaySession.shared_notes && (
+          <div className="text-xs font-mono text-amber-300/90 italic flex items-center gap-1.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
+            <span>{todaySession.shared_notes}</span>
+          </div>
+        )}
+      </div>
+
       {isDuoCard && todaySession.louis && todaySession.clara ? (
-        /* DUO MODE TODAY CARD */
-        <div className="space-y-3.5">
-          <div className="flex items-center justify-between gap-3 pb-2.5 border-b border-white/[0.06]">
-            <div className="flex items-center gap-2">
-              <span className="text-[10px] font-mono font-black uppercase tracking-wider px-2.5 py-0.5 rounded-md bg-[#F59E0B]/20 text-[#F59E0B] border border-[#F59E0B]/40 flex items-center gap-1">
-                <HeartHandshake className="w-3 h-3 text-[#F59E0B]" />
-                AUJOURD'HUI EN DUO
+        /* DUEL LOUIS VS CLARA : SPLIT TELEMETRY (Facing half-screens) */
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4">
+          {/* LOUIS COLUMN */}
+          <div className="p-4 rounded-xl bg-[#04070D] border-l-2 border-[#00E5FF] border-r border-t border-b border-white/[0.03] space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="px-2 py-0.5 rounded border border-[#00E5FF]/30 text-[#00E5FF] bg-[#00E5FF]/10 text-[10px] font-mono font-bold tracking-[0.18em] uppercase">
+                ATHLÈTE 1 • LOUIS
               </span>
-              <span className="text-xs text-slate-400 font-mono">
-                {todaySession.date_formatted || todaySession.date_short}
+              <span className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest">
+                {todaySession.louis.sport}
               </span>
             </div>
-            {todaySession.shared_notes && (
-              <span className="text-xs text-amber-200/90 font-medium italic">
-                🤝 {todaySession.shared_notes}
-              </span>
+
+            <div>
+              <div className="text-[11px] uppercase tracking-[0.2em] text-zinc-500 font-semibold font-mono">
+                SÉANCE PROGRAMMÉE
+              </div>
+              <h4 className="text-base font-bold text-white tracking-tight mt-0.5">
+                {todaySession.louis.type}
+              </h4>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2 pt-2 border-t border-white/[0.04]">
+              <div>
+                <div className="text-[11px] uppercase tracking-[0.2em] text-zinc-500 font-semibold font-mono">
+                  DURÉE
+                </div>
+                <div className="font-mono text-2xl sm:text-3xl font-bold tracking-tight text-white mt-0.5">
+                  {todaySession.louis.duration}
+                </div>
+              </div>
+              <div>
+                <div className="text-[11px] uppercase tracking-[0.2em] text-zinc-500 font-semibold font-mono">
+                  INTENSITÉ
+                </div>
+                <div className="font-mono text-sm sm:text-base font-bold text-[#00E5FF] mt-1">
+                  {todaySession.louis.intensity || 'Zone 2 Aérobie'}
+                </div>
+              </div>
+            </div>
+
+            {todaySession.louis.focus && (
+              <p className="text-xs font-mono text-zinc-400 pt-1 leading-relaxed border-t border-white/[0.03]">
+                Focus : {todaySession.louis.focus}
+              </p>
             )}
+
+            <div className="pt-2 flex justify-end">
+              {renderDiscreetActions(todaySession.louis, 'louis')}
+            </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            {/* Louis Subcard */}
-            <div className="p-3.5 rounded-xl bg-[#0F141F] border border-[#00A7E1]/30 flex items-center justify-between gap-3 shadow-[0_0_15px_rgba(0,167,225,0.06)]">
-              <div className="flex items-center gap-2.5 min-w-0">
-                <div className="w-9 h-9 rounded-lg bg-[#00A7E1]/15 border border-[#00A7E1]/30 text-[#00A7E1] flex items-center justify-center text-sm font-bold flex-shrink-0">
-                  {todaySession.louis.sport_icon || '🏃‍♂️'}
-                </div>
-                <div className="min-w-0">
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-[10px] font-mono font-bold text-[#00A7E1] uppercase tracking-wider">Louis</span>
-                    <span className="text-xs font-bold text-white truncate">{todaySession.louis.type}</span>
-                  </div>
-                  <div className="text-[11px] text-slate-400 font-mono mt-0.5">
-                    {todaySession.louis.duration} • {todaySession.louis.intensity || 'Zone 2'}
-                  </div>
-                </div>
-              </div>
-              <div className="flex-shrink-0">{renderActions(todaySession.louis, 'louis')}</div>
+          {/* CLARA COLUMN */}
+          <div className="p-4 rounded-xl bg-[#04070D] border-l-2 border-[#FB7185] border-r border-t border-b border-white/[0.03] space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="px-2 py-0.5 rounded border border-[#FB7185]/30 text-[#FB7185] bg-[#FB7185]/10 text-[10px] font-mono font-bold tracking-[0.18em] uppercase">
+                ATHLÈTE 2 • CLARA
+              </span>
+              <span className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest">
+                {todaySession.clara.sport}
+              </span>
             </div>
 
-            {/* Clara Subcard */}
-            <div className="p-3.5 rounded-xl bg-[#0F141F] border border-[#F43F5E]/30 flex items-center justify-between gap-3 shadow-[0_0_15px_rgba(244,63,94,0.06)]">
-              <div className="flex items-center gap-2.5 min-w-0">
-                <div className="w-9 h-9 rounded-lg bg-[#F43F5E]/15 border border-[#F43F5E]/30 text-[#F43F5E] flex items-center justify-center text-sm font-bold flex-shrink-0">
-                  {todaySession.clara.sport_icon || '🏃‍♀️'}
+            <div>
+              <div className="text-[11px] uppercase tracking-[0.2em] text-zinc-500 font-semibold font-mono">
+                SÉANCE PROGRAMMÉE
+              </div>
+              <h4 className="text-base font-bold text-white tracking-tight mt-0.5">
+                {todaySession.clara.type}
+              </h4>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2 pt-2 border-t border-white/[0.04]">
+              <div>
+                <div className="text-[11px] uppercase tracking-[0.2em] text-zinc-500 font-semibold font-mono">
+                  DURÉE
                 </div>
-                <div className="min-w-0">
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-[10px] font-mono font-bold text-[#F43F5E] uppercase tracking-wider">Clara</span>
-                    <span className="text-xs font-bold text-white truncate">{todaySession.clara.type}</span>
-                  </div>
-                  <div className="text-[11px] text-slate-400 font-mono mt-0.5">
-                    {todaySession.clara.duration} • {todaySession.clara.intensity || 'Zone 2'}
-                  </div>
+                <div className="font-mono text-2xl sm:text-3xl font-bold tracking-tight text-white mt-0.5">
+                  {todaySession.clara.duration}
                 </div>
               </div>
-              <div className="flex-shrink-0">{renderActions(todaySession.clara, 'clara')}</div>
+              <div>
+                <div className="text-[11px] uppercase tracking-[0.2em] text-zinc-500 font-semibold font-mono">
+                  INTENSITÉ
+                </div>
+                <div className="font-mono text-sm sm:text-base font-bold text-[#FB7185] mt-1">
+                  {todaySession.clara.intensity || 'Zone 2 Foncier'}
+                </div>
+              </div>
+            </div>
+
+            {todaySession.clara.focus && (
+              <p className="text-xs font-mono text-zinc-400 pt-1 leading-relaxed border-t border-white/[0.03]">
+                Focus : {todaySession.clara.focus}
+              </p>
+            )}
+
+            <div className="pt-2 flex justify-end">
+              {renderDiscreetActions(todaySession.clara, 'clara')}
             </div>
           </div>
         </div>
       ) : (
-        /* SINGLE ATHLETE TODAY CARD */
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-          {/* Left: Day & Session Info */}
-          <div className="flex items-start gap-4">
-            <div className="w-12 h-12 rounded-2xl bg-[#00A7E1]/20 border border-[#00A7E1]/40 text-[#00A7E1] flex items-center justify-center text-xl shadow-[0_0_15px_rgba(0,167,225,0.2)] flex-shrink-0">
-              {icon}
+        /* SINGLE ATHLETE MODE */
+        <div className="pt-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <span className="px-2 py-0.5 rounded border border-[#00E5FF]/30 text-[#00E5FF] bg-[#00E5FF]/10 text-[10px] font-mono font-bold tracking-[0.18em] uppercase">
+                {todaySession.day_name || todaySession.day}
+              </span>
+              {todaySession.is_key && (
+                <span className="px-2 py-0.5 rounded border border-amber-400/30 text-amber-300 bg-amber-400/10 text-[10px] font-mono font-bold tracking-[0.18em] uppercase">
+                  SÉANCE CLÉ
+                </span>
+              )}
             </div>
 
-            <div className="space-y-1">
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="text-[10px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-[#00A7E1]/20 text-[#00A7E1] border border-[#00A7E1]/30">
-                  AUJOURD'HUI • {todaySession.day_name || todaySession.day}
-                </span>
-                <span className="text-xs text-slate-400 font-mono">
-                  {todaySession.date_formatted || todaySession.date_short}
-                </span>
-                {todaySession.is_key && (
-                  <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-[#F59E0B]/20 text-[#F59E0B] border border-[#F59E0B]/30">
-                    SÉANCE CLÉ
-                  </span>
-                )}
+            <div>
+              <div className="text-[11px] uppercase tracking-[0.2em] text-zinc-500 font-semibold font-mono">
+                SÉANCE DU JOUR
               </div>
-
-              <h3 className="text-base sm:text-lg font-extrabold text-white">
+              <h3 className="text-lg font-bold text-white tracking-tight">
                 {todaySession.type}
               </h3>
-
-              {todaySession.shared_notes && (
-                <div className="text-xs font-medium text-amber-200/90 flex items-center gap-1.5 bg-[#F59E0B]/10 border border-[#F59E0B]/20 px-2.5 py-1 rounded-lg">
-                  <span>🤝 Note Duo :</span>
-                  <span>{todaySession.shared_notes}</span>
-                </div>
-              )}
-
-              {todaySession.focus && (
-                <p className="text-xs text-slate-300 max-w-xl">
-                  {todaySession.focus}
-                </p>
-              )}
             </div>
+
+            {todaySession.focus && (
+              <p className="text-xs font-mono text-zinc-400 max-w-xl">
+                {todaySession.focus}
+              </p>
+            )}
           </div>
 
-          {/* Right: Metrics & Immediate Action Button */}
-          <div className="flex flex-wrap items-center gap-3 self-end lg:self-center">
-            {/* Duration & Intensity badge */}
-            <div className="text-right px-3 py-1.5 rounded-xl bg-[#0F141F] border border-white/[0.06]">
-              <div className="text-xs font-bold text-slate-100 font-mono">
+          <div className="flex items-center gap-4 self-end md:self-center font-mono">
+            <div className="text-right px-3.5 py-2 rounded-xl bg-[#04070D] border border-white/[0.05]">
+              <div className="text-[11px] uppercase tracking-[0.2em] text-zinc-500 font-semibold">
+                DURÉE
+              </div>
+              <div className="font-mono text-2xl font-bold text-white">
                 {todaySession.duration}
               </div>
-              {todaySession.intensity && (
-                <div className="text-[10px] font-mono text-slate-400">
-                  {todaySession.intensity}
-                </div>
-              )}
             </div>
 
-            {/* Action Button */}
             {isRunning && !isCompleted && (
-              <>
-                {isScheduled ? (
-                  <div className="px-4 py-2 rounded-xl bg-[#00A7E1]/15 border border-[#00A7E1]/30 text-[#00A7E1] text-xs font-mono font-bold flex items-center gap-2 shadow-sm">
-                    <Watch className="w-4 h-4 text-[#00A7E1]" />
-                    Prêt sur votre montre Garmin
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => onOpenCustomizer(todaySession)}
-                      className="p-2.5 rounded-xl bg-[#171D2A] border border-white/[0.08] hover:border-[#00A7E1]/40 text-slate-300 hover:text-[#00A7E1] transition-colors"
-                      title="Personnaliser les répétitions et allures"
-                    >
-                      <Sliders className="w-4 h-4" />
-                    </button>
-
-                    <button
-                      onClick={() => onScheduleWorkout(todaySession)}
-                      className="px-4 py-2.5 rounded-xl btn-telemetry-cyan text-xs font-semibold flex items-center gap-2 active:scale-95 transition-all"
-                    >
-                      <Watch className="w-4 h-4" />
-                      Programmer sur Garmin
-                    </button>
-                  </div>
-                )}
-              </>
+              isScheduled ? (
+                <div className="px-3.5 py-2 rounded-lg bg-[#00E5FF]/10 border border-[#00E5FF]/30 text-[#00E5FF] text-xs font-mono font-bold flex items-center gap-2">
+                  <Watch className="w-4 h-4" />
+                  <span>Prêt sur votre montre Garmin</span>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => onOpenCustomizer(todaySession)}
+                    className="p-2.5 rounded-lg bg-[#04070D] border border-white/[0.06] hover:border-white/20 text-zinc-400 hover:text-white transition-colors"
+                    title="Personnaliser répétitions et allures"
+                  >
+                    <Sliders className="w-4 h-4" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => onScheduleWorkout(todaySession)}
+                    className="px-4 py-2 rounded-lg bg-[#04070D] border border-[#00E5FF]/30 hover:bg-[#00E5FF]/10 text-[#00E5FF] hover:text-white text-xs font-mono font-semibold flex items-center gap-1.5 transition-all shadow-[0_0_12px_rgba(0,229,255,0.1)]"
+                  >
+                    <Watch className="w-4 h-4" />
+                    <span>Programmer sur Garmin</span>
+                  </button>
+                </div>
+              )
             )}
 
             {isUltimate && !isCompleted && (
               <button
+                type="button"
                 onClick={() => onOpenManualModal(todaySession)}
-                className="px-4 py-2.5 rounded-xl bg-[#00A7E1]/15 hover:bg-[#00A7E1]/25 border border-[#00A7E1]/30 text-[#00A7E1] text-xs font-bold transition-all flex items-center gap-2 shadow-sm active:scale-95"
+                className="px-4 py-2 rounded-lg bg-[#04070D] border border-[#00E5FF]/30 hover:bg-[#00E5FF]/10 text-[#00E5FF] hover:text-white text-xs font-mono font-semibold flex items-center gap-1.5 transition-all"
               >
                 <Check className="w-4 h-4" />
-                Valider l'Ultimate fait
+                <span>Valider fait</span>
               </button>
             )}
 
             {isCompleted && (
-              <div className="px-4 py-2 rounded-xl bg-[#10B981]/15 border border-[#10B981]/30 text-[#10B981] text-xs font-mono font-bold flex items-center gap-2">
-                <Check className="w-4 h-4 text-[#10B981]" />
-                SÉANCE TERMINÉE
+              <div className="px-3.5 py-2 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-mono font-bold flex items-center gap-1.5">
+                <Check className="w-4 h-4" />
+                <span>TERMINÉ</span>
               </div>
             )}
 
             {isRest && (
-              <div className="px-4 py-2 rounded-xl bg-slate-800 border border-white/[0.08] text-slate-400 text-xs font-mono font-bold">
+              <div className="px-3.5 py-2 rounded-lg bg-white/[0.02] border border-white/[0.05] text-zinc-500 text-xs font-mono font-bold">
                 REPOS & RÉCUPÉRATION
               </div>
             )}
@@ -273,3 +317,5 @@ export const TodayActionCard: React.FC<TodayActionCardProps> = ({
     </div>
   );
 };
+
+export default TodayActionCard;
