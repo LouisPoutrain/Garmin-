@@ -47,6 +47,17 @@ def get_token_path() -> str:
     return resolve_token_path(os.getenv("GARMINTOKENS") or "~/.garminconnect")
 
 
+def get_athlete_token_path(athlete_id: str = "louis") -> str:
+    """Get token storage directory for a specific athlete (Louis or Clara)."""
+    clean_id = (athlete_id or "louis").strip().lower()
+    if clean_id in ("louis", "default"):
+        return get_token_path()
+    custom_env = os.getenv(f"GARMINTOKENS_{clean_id.upper()}")
+    if custom_env:
+        return resolve_token_path(custom_env)
+    return resolve_token_path(f"~/.garminconnect_{clean_id}")
+
+
 def get_token_base64_path() -> str:
     """Get base64 token file path from environment or default.
 
@@ -56,6 +67,14 @@ def get_token_base64_path() -> str:
     return resolve_token_path(
         os.getenv("GARMINTOKENS_BASE64") or "~/.garminconnect_base64"
     )
+
+
+def get_athlete_token_base64_path(athlete_id: str = "louis") -> str:
+    """Get base64 token file path for a specific athlete."""
+    clean_id = (athlete_id or "louis").strip().lower()
+    if clean_id in ("louis", "default"):
+        return get_token_base64_path()
+    return resolve_token_path(f"~/.garminconnect_{clean_id}_base64")
 
 
 def token_exists(token_path: str = None) -> bool:

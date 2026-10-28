@@ -1,0 +1,105 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --font-heading: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+    --font-body: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  }
+
+  html {
+    scroll-behavior: smooth;
+    background-color: #0A0D14;
+  }
+
+  body {
+    font-family: var(--font-body);
+    background-color: #0A0D14;
+    color: #E2E8F0;
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-heading);
+    letter-spacing: -0.02em;
+  }
+}
+
+/* Custom Sleek Scrollbar */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #252D3D;
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #384358;
+}
+
+/* Matte Design System Surfaces */
+.matte-card {
+  background-color: #121622;
+  border: 1px solid #1E2535;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.3);
+}
+
+.matte-card-subtle {
+  background-color: #171C2B;
+  border: 1px solid #232B3E;
+}
+
+.matte-card-hover {
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.matte-card-hover:hover {
+  border-color: #2D374D;
+  background-color: #151A27;
+}
+
+/* Matte Action Buttons */
+.btn-matte-primary {
+  background-color: #E0583A;
+  color: #FFFFFF;
+  font-weight: 600;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: all 0.15s ease;
+}
+
+.btn-matte-primary:hover {
+  background-color: #C84B30;
+}
+
+.btn-matte-secondary {
+  background-color: #1C2333;
+  color: #CBD5E1;
+  border: 1px solid #283348;
+  transition: all 0.15s ease;
+}
+
+.btn-matte-secondary:hover {
+  background-color: #242D42;
+  color: #FFFFFF;
+  border-color: #35425D;
+}
+
+/* Reduced Motion Override */
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

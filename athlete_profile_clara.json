@@ -1,0 +1,39 @@
+{
+  "athlete": {
+    "id": "clara",
+    "name": "Clara",
+    "primary_sports": ["running"],
+    "experience_level": "intermediate"
+  },
+  "goals": {
+    "primary_goal": "Passer sous les 50 min au 10 km (allure cible : 4:59 min/km)",
+    "target_race": "10 km sur route",
+    "target_date": "2027-04-18",
+    "target_time": "00:49:59",
+    "weekly_sessions_target": 4,
+    "weekly_hours_target": 3.5
+  },
+  "zones": {
+    "max_heart_rate": 185,
+    "resting_heart_rate": 58,
+    "hr_zones": {
+      "Z1_recovery": [100, 128],
+      "Z2_endurance": [129, 148],
+      "Z3_tempo": [149, 162],
+      "Z4_threshold": [163, 175],
+      "Z5_anaerobic": [176, 185]
+    }
+  },
+  "schedule_preferences": {
+    "preferred_rest_days": ["Monday", "Thursday"],
+    "long_run_day": "Sunday",
+    "intervals_day": "Wednesday",
+    "easy_run_day": "Friday"
+  },
+  "coaching_rules": {
+    "methodology": "polarized_80_20",
+    "min_readiness_for_intervals": 65,
+    "min_sleep_score_for_hard_session": 70,
+    "max_weekly_volume_increase_percent": 10
+  }
+}

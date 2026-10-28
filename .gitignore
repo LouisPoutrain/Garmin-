@@ -9,7 +9,7 @@ dist/
 build/
 *.egg
 
-# Virtual environments
+# Virtual environments and secrets
 .env
 .venv/
 .uv-cache/
@@ -18,8 +18,18 @@ build/
 .claude.md
 .mcp.json
 docs/*
-.gitignore
 playground/*
 scratch/*
 tests/fixtures/captured/*
 !tests/fixtures/captured/poc_walk_run.json
+
+# Local runtime data & databases
+data/
+src/data/
+*.db
+*.sqlite*
+
+# Node
+node_modules/
+frontend/node_modules/
+

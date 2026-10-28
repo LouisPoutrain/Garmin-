@@ -1,0 +1,38 @@
+{
+  "athlete": {
+    "name": "Louis Poutrain",
+    "primary_sports": ["running", "ultimate_frisbee", "cycling"],
+    "experience_level": "intermediate_advanced"
+  },
+  "goals": {
+    "primary_goal": "Passer sous les 40 min au 10 km en 6 mois (allure cible : 4:00 min/km)",
+    "target_race": "10 km sur route",
+    "target_date": "2027-04-18",
+    "target_time": "00:39:59",
+    "weekly_sessions_target": 5,
+    "weekly_hours_target": 5.5
+  },
+  "zones": {
+    "max_heart_rate": 190,
+    "resting_heart_rate": 52,
+    "hr_zones": {
+      "Z1_recovery": [100, 125],
+      "Z2_endurance": [126, 145],
+      "Z3_tempo": [146, 160],
+      "Z4_threshold": [161, 175],
+      "Z5_anaerobic": [176, 190]
+    }
+  },
+  "schedule_preferences": {
+    "preferred_rest_days": ["Monday", "Friday"],
+    "long_run_day": "Sunday",
+    "intervals_day": "Wednesday",
+    "strength_days": ["Tuesday", "Thursday"]
+  },
+  "coaching_rules": {
+    "methodology": "polarized_80_20",
+    "min_readiness_for_intervals": 65,
+    "min_sleep_score_for_hard_session": 70,
+    "max_weekly_volume_increase_percent": 10
+  }
+}

@@ -11,6 +11,9 @@ import getpass
 import base64
 
 import requests
+from dotenv import load_dotenv
+
+load_dotenv()
 from garminconnect import Garmin, GarminConnectAuthenticationError, GarminConnectConnectionError, GarminConnectTooManyRequestsError
 
 from garmin_mcp.token_utils import (
@@ -233,8 +236,10 @@ def authenticate(token_path: str, token_base64_path: str, force_reauth: bool = F
     except GarminConnectConnectionError as e:
         error_msg = str(e)
         print(f"\n✗ Authentication error", file=sys.stderr)
-        if "401" in error_msg or "403" in error_msg:
-            print("  Invalid credentials. Please check your email and password.", file=sys.stderr)
+        if "cloudflare" in error_msg.lower() or "429" in error_msg:
+            print("  IP rate limited or blocked by Cloudflare. Please wait 15-30 minutes or try with a mobile hotspot (4G/5G).", file=sys.stderr)
+        elif "401" in error_msg or "403" in error_msg:
+            print("  Authentication failed (HTTP 401/403). If your credentials are correct, your IP may be temporarily blocked by Cloudflare.", file=sys.stderr)
         elif "500" in error_msg or "503" in error_msg:
             print("  Garmin Connect service issue. Please try again later.", file=sys.stderr)
         else:
