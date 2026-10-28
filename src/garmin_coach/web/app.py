@@ -521,8 +521,8 @@ async def api_chat(request):
 
         # 1. Initialize Memory and learn from incoming message
         memory = CoachMemory()
-        learned_facts = memory.auto_learn_from_message(message)
-        memory_summary = memory.get_memory_summary_for_prompt()
+        learned_facts = memory.auto_learn_from_message(message, athlete_context=athlete_context)
+        memory_summary = memory.get_memory_summary_for_prompt(athlete_context=athlete_context)
 
         # 1b. Check if user requests 3-week planning or cycle generation
         msg_lower = message.lower()
@@ -733,6 +733,31 @@ async def api_chat(request):
             chat_history=history,
         )
 
+        # 4b. Extract and process LLM-driven MEMORY_UPDATE tags
+        llm_content = result.get("content", "")
+        if "<!-- MEMORY_UPDATE:" in llm_content:
+            try:
+                mem_match = re.search(r'<!--\s*MEMORY_UPDATE:\s*(\[.*?\])\s*-->', llm_content, re.DOTALL)
+                if mem_match:
+                    updates = json.loads(mem_match.group(1))
+                    for upd in updates:
+                        action = upd.get("action", "add")
+                        cat = upd.get("category", "preferences")
+                        fact_text = upd.get("fact", "").strip()
+                        athlete_target = upd.get("athlete", athlete_context)
+                        if action == "clear_injuries":
+                            memory.clear_category("injuries_and_sensitivities")
+                            learned_facts.append(f"🩺 Douleurs retirées de la mémoire active ({athlete_target}).")
+                        elif action == "add" and fact_text:
+                            athlete_prefix = f"[{athlete_target.capitalize()}] " if not fact_text.startswith("[") else ""
+                            final_fact = f"{athlete_prefix}{fact_text}"
+                            memory.add_fact(cat, final_fact, athlete=athlete_target)
+                            learned_facts.append(f"🧠 Mémorisé par le coach ({cat}) : {final_fact}")
+                    # Clean the tag from the final response content so the user does not see internal tags
+                    result["content"] = re.sub(r'<!--\s*MEMORY_UPDATE:\s*\[.*?\]\s*-->', '', llm_content, flags=re.DOTALL).strip()
+            except Exception as e_mem:
+                print(f"Memory update extraction note: {e_mem}")
+
         result["learned_facts"] = learned_facts
 
         # 5. Persistent Chat Logging for debugging and athlete history
@@ -800,6 +825,20 @@ async def api_remove_fact(request):
         memory = CoachMemory()
         removed = memory.remove_fact(category, fact)
         return JSONResponse({"status": "success", "removed": removed, "memory": memory.data})
+    except Exception as e:
+        return JSONResponse({"error": str(e)}, status_code=500)
+
+
+async def api_reset_memory(request):
+    """Completely resets athlete memory to a neutral baseline."""
+    try:
+        memory = CoachMemory()
+        memory.reset()
+        return JSONResponse({
+            "status": "success",
+            "message": "Mémoire réinitialisée avec succès à l'état neutre.",
+            "memory": memory.data,
+        })
     except Exception as e:
         return JSONResponse({"error": str(e)}, status_code=500)
 
@@ -925,6 +964,7 @@ routes = [
     Route("/api/memory", endpoint=api_memory, methods=["GET"]),
     Route("/api/memory/fact", endpoint=api_add_fact, methods=["POST"]),
     Route("/api/memory/fact/remove", endpoint=api_remove_fact, methods=["POST"]),
+    Route("/api/memory/reset", endpoint=api_reset_memory, methods=["POST"]),
     Route("/api/history", endpoint=api_history_profile, methods=["GET"]),
     Mount("/static", app=StaticFiles(directory=STATIC_DIR), name="static"),
 ]

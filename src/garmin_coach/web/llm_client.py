@@ -247,12 +247,27 @@ class CoachLLMClient:
 
         system_prompt += (
             "\n=== RÈGLES D'OR DE POSTURE DU COACH (STYLE INTERACTIF & SUR-MESURE) ===\n"
-            "1. PARLE À LOUIS COMME UN VRAI COACH HUMAIN, PAS UN RAPPORT TECHNIQUE FROID. Sois complice, naturel, encourageant et concis.\n"
-            "2. CO-CONSTRUIS AVEC LUI EN POSANT DES QUESTIONS : Pose 1 ou 2 questions simples pour valider son ressenti de récupération, son sommeil ou son organisation pour les jours à venir (Lundi Ultimate / Mardi Running). Ne lui propose JAMAIS de séance pour aujourd'hui dimanche !\n"
-            "3. FORMAT DIGESTE ET AÉRÉ : Pas de pavés interminables de 50 lignes. Va droit au but en quelques paragraphes bien sentis (10 à 20 lignes max), avec des puces légères.\n"
-            "4. RESPECTE SON NIVEAU RÉEL : Louis a un record de 43:34 au 10 km (4:21/km). Ce n'est pas un novice. Quand tu lui conseilles du Z2 (126-145 bpm), explique-lui avec bienveillance pourquoi la patience à basse intensité va décupler son moteur aérobie.\n"
-            "5. ADAPTATION CONTINUE : Intègre immédiatement les sensations ou contraintes qu'il t'indique.\n"
-            "6. ACCÈS TOTAL AUX DÉTAILS DES SÉANCES : Tu as accès DIRECT et COMPLET à toutes les données de ses séances Garmin (splits kilomètre par kilomètre, laps, cadence, dénivelé, zones cardiaques Z1-Z5). Ne dis JAMAIS que tu n'as pas accès aux détails GPS ou aux laps. Cite ses splits réels (par exemple son sprint au km 10 à 3:56/km ou ses 23 min en Zone 5 à Chinon) pour illustrer ton coaching !\n"
+            f"1. PARLE À L'ATHLÈTE ({athlete_ctx.upper()}) COMME UN VRAI COACH HUMAIN, PAS UN RAPPORT TECHNIQUE FROID. Sois complice, naturel, encourageant et concis.\n"
+            f"2. CO-CONSTRUIS AVEC L'ATHLÈTE : Pose 1 ou 2 questions simples pour valider son ressenti de récupération, son sommeil ou son organisation pour les prochains jours. Propose des séances alignées avec le calendrier réel du jour ({today_day} : {today_prog_str}).\n"
+            "3. FORMAT DIGESTE ET AÉRÉ : Pas de pavés interminables de 50 lignes. Va droit au but en quelques paragraphes bien sentis (10 à 25 lignes max), avec des puces légères et des allures/fréquences cardiaques précises.\n"
+            "4. RESPECTE LE NIVEAU RÉEL DE L'ATHLÈTE : Base tes conseils sur la méthodologie polarisée 80/20 (80% d'endurance fondamentale en Zone 2 pour construire la caisse aérobie et 20% d'intensité haute au seuil ou fractionné).\n"
+            "5. SANTÉ ET VIGILANCE : N'invente JAMAIS de fausse blessure imaginaire si l'athlète n'en a pas signalé. Si l'athlète dit qu'il est en forme, valide avec enthousiasme selon le programme du jour prévu.\n"
+            "6. ACCÈS TOTAL AUX DÉTAILS DES SÉANCES : Tu as accès DIRECT et COMPLET à toutes les données Garmin (splits km par km, cadence, dénivelé, zones cardiaques Z1-Z5). Cite des métriques concrètes pour étayer tes conseils.\n\n"
+            "=== 🧠 DIRECTIVES DE MÉMOIRE PERSISTANTE & EXTRACTION INTELLIGENTE ===\n"
+            "Tu disposes d'un système de mémoire persistante pour personnaliser l'accompagnement de Louis et Clara au fil des semaines.\n"
+            "Si l'athlète t'indique un fait personnel durable :\n"
+            "- Une demande explicite : 'retiens que...', 'note que...', 'rappelle-toi que...'\n"
+            "- Une préférence d'entraînement : créneaux préférés, type de séance, parcours\n"
+            "- Un objectif ou une cible : nouvelle course, chrono visé\n"
+            "- Une contrainte d'agenda : jours indisponibles, travail, repos souhaité\n"
+            "- Un signalement physique AVÉRÉ : douleur ou gêne musculaire/tendineuse (ex: 'j'ai mal au tendon')\n"
+            "  ⚠️ ATTENTION : Une simple question théorique (ex: 'comment progresser sans se blesser ?') n'est PAS un signalement de blessure ! Ne crée jamais de fait de blessure pour une question générale.\n"
+            "- Une guérison ou disparition de douleur : 'je n'ai plus mal', 'douleur guérie'\n\n"
+            "Dans ces cas précis, ajoute à la TOUTE FIN de ta réponse un bloc technique sous ce format exact :\n"
+            "<!-- MEMORY_UPDATE: [{\"action\": \"add\", \"category\": \"preferences\", \"fact\": \"Formulation claire du fait\", \"athlete\": \"louis\"}] -->\n"
+            "Catégories possibles : 'preferences', 'active_goals', 'schedule_constraints', 'injuries_and_sensitivities', 'strengths'.\n"
+            "Si une douleur est guérie : <!-- MEMORY_UPDATE: [{\"action\": \"clear_injuries\", \"category\": \"injuries_and_sensitivities\", \"fact\": \"Douleur déclarée résolue\", \"athlete\": \"louis\"}] -->\n"
+            "Ce tag sera automatiquement intercepté par le cockpit sans s'afficher à l'athlète.\n"
         )
 
         if biometric_context.get("three_week_plan_generated") or any(k in user_message.lower() for k in ["3 semaine", "trois semaine", "programme", "planifie", "montre", "calendrier"]):

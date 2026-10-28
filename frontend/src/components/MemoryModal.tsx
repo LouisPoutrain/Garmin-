@@ -11,6 +11,7 @@ import {
   Calendar,
   Compass,
   Award,
+  RotateCcw,
 } from 'lucide-react';
 import type { AthleteMemory, HistoryProfile } from '../types';
 
@@ -22,6 +23,7 @@ interface MemoryModalProps {
   onAddFact: (category: string, fact: string) => Promise<void>;
   onRemoveFact: (category: string, fact: string) => Promise<void>;
   onClearInjuries: () => void;
+  onResetMemory?: () => Promise<void>;
 }
 
 export const MemoryModal: React.FC<MemoryModalProps> = ({
@@ -32,6 +34,7 @@ export const MemoryModal: React.FC<MemoryModalProps> = ({
   onAddFact,
   onRemoveFact,
   onClearInjuries,
+  onResetMemory,
 }) => {
   const [newCategory, setNewCategory] = useState('preferences');
   const [newFactText, setNewFactText] = useState('');
@@ -136,14 +139,27 @@ export const MemoryModal: React.FC<MemoryModalProps> = ({
                     </div>
                   </div>
 
-                  <Dialog.Close asChild>
-                    <button
-                      className="p-1.5 rounded-xl text-slate-400 hover:text-white hover:bg-[#171D2A] transition-colors focus-visible:outline-none"
-                      aria-label="Fermer"
-                    >
-                      <X className="w-5 h-5" />
-                    </button>
-                  </Dialog.Close>
+                  <div className="flex items-center gap-2">
+                    {onResetMemory && (
+                      <button
+                        type="button"
+                        onClick={onResetMemory}
+                        className="px-2.5 py-1.5 rounded-xl text-[11px] font-mono text-slate-400 hover:text-[#F43F5E] hover:bg-[#F43F5E]/10 border border-white/[0.08] hover:border-[#F43F5E]/30 transition-all flex items-center gap-1.5"
+                        title="Réinitialiser la mémoire du coach à un état 100% neutre"
+                      >
+                        <RotateCcw className="w-3.5 h-3.5" />
+                        <span className="hidden sm:inline">Reset Neutre</span>
+                      </button>
+                    )}
+                    <Dialog.Close asChild>
+                      <button
+                        className="p-1.5 rounded-xl text-slate-400 hover:text-white hover:bg-[#171D2A] transition-colors focus-visible:outline-none"
+                        aria-label="Fermer"
+                      >
+                        <X className="w-5 h-5" />
+                      </button>
+                    </Dialog.Close>
+                  </div>
                 </div>
 
                 {/* Section 1: Lifetime Garmin Analytics Banner */}

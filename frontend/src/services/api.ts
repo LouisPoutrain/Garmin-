@@ -203,6 +203,16 @@ export const api = {
     return res.json();
   },
 
+  async resetMemory(): Promise<AthleteMemory> {
+    const res = await fetch('/api/memory/reset', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+    });
+    if (!res.ok) throw new Error('Échec de la réinitialisation de la mémoire');
+    const data = await res.json();
+    return data.memory;
+  },
+
   async addMemoryFact(category: string, fact: string): Promise<AthleteMemory> {
     const res = await fetch('/api/memory/fact', {
       method: 'POST',

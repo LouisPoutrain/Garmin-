@@ -197,6 +197,13 @@ export const App: React.FC = () => {
     setMemory(updated);
   };
 
+  const handleResetMemory = async () => {
+    if (window.confirm("Êtes-vous certain de vouloir réinitialiser la mémoire du coach à un état 100% neutre ?")) {
+      const updated = await api.resetMemory();
+      setMemory(updated);
+    }
+  };
+
   const handleSelectActivity = async (activityId: number | string) => {
     try {
       const detail = await api.getActivityDetail(activityId);
@@ -441,6 +448,7 @@ export const App: React.FC = () => {
         onAddFact={handleAddFact}
         onRemoveFact={handleRemoveFact}
         onClearInjuries={handleClearInjuries}
+        onResetMemory={handleResetMemory}
       />
 
       <ActivityDetailModal
