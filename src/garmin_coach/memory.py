@@ -2,9 +2,10 @@
 
 import json
 import re
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 from pathlib import Path
 from typing import Dict, Any, List, Optional
+from garmin_coach.database.repository import AthleteMemoryRepository, DuoSynergyRepository
 
 MEMORY_FILE = Path(__file__).resolve().parents[2] / "data" / "coach_memory.json"
 
@@ -288,49 +289,163 @@ class CoachMemory:
 
     def get_memory_summary_for_prompt(self, athlete_context: str = "duo") -> str:
         """Formats the persistent memory into a concise markdown section for the LLM prompt."""
-        facts = self.data.get("facts", {})
-        total_facts = sum(len(v) for v in facts.values() if isinstance(v, list))
+        clean_ctx = (athlete_context or "duo").strip().lower()
+        active_louis = AthleteMemoryRepository.get_active("louis") if clean_ctx in ("louis", "duo") else []
+        active_clara = AthleteMemoryRepository.get_active("clara") if clean_ctx in ("clara", "duo") else []
+        recent_synergies = DuoSynergyRepository.get_recent(2)
 
-        if total_facts == 0:
+        facts = self.data.get("facts", {})
+        total_facts = sum(len(v) for v in facts.values() if isinstance(v, list)) + len(active_louis) + len(active_clara)
+
+        if total_facts == 0 and not recent_synergies:
             return (
                 "=== 🧠 ÉTAT DE LA MÉMOIRE PERSISTANTE (BASE NEUTRE) ===\n"
-                "• Mémoire neutre : aucune blessure signalée, aucune contrainte rigide pré-enregistrée.\n"
+                "• Mémoire neutre : aucune blessure active, aucune contrainte rigide pré-enregistrée.\n"
                 "• Les voyants de santé sont au vert (aucune douleur active). Ne fabrique JAMAIS de blessure imaginaire.\n"
                 "• Écoute et flexibilité totale : intègre et mémorise en temps réel tout nouveau fait, consigne ou ressenti exprimé par l'athlète.\n"
             )
 
-        lines = [f"=== 🧠 MÉMOIRE PERSISTANTE DU COACH ({athlete_context.upper()}) ==="]
+        lines = [f"=== 🧠 MÉMOIRE ÉPISODIQUE & SANTÉ ({clean_ctx.upper()}) ==="]
 
-        # Alertes & blessures
-        injuries = facts.get("injuries_and_sensitivities", [])
-        if injuries:
-            lines.append("⚠️ VIGILANCE SANTÉ / DOULEURS ACTIVES : " + " | ".join(injuries[-3:]))
-        else:
-            lines.append("✅ SANTÉ : Aucune blessure active signalée. Voyants au vert.")
+        # 1. Active episodic memories from SQLite (Louis)
+        if active_louis:
+            lines.append("• Souvenirs actifs Louis :")
+            for m in active_louis[:4]:
+                sev_icon = "🚨 [CRITIQUE]" if m["severity"] >= 3 else ("⚠️ [MODÉRÉ]" if m["severity"] == 2 else "ℹ️")
+                exp = f"(expire: {m['expires_at'][:10]})" if m.get("expires_at") else "(permanent)"
+                lines.append(f"  - {sev_icon} [{m['category'].upper()}] {m['content']} {exp}")
+        elif clean_ctx in ("louis", "duo"):
+            lines.append("• Louis : ✅ Santé optimale, aucune douleur active signalée.")
 
-        # Préférences
+        # 2. Active episodic memories from SQLite (Clara)
+        if active_clara:
+            lines.append("• Souvenirs actifs Clara :")
+            for m in active_clara[:4]:
+                sev_icon = "🚨 [CRITIQUE]" if m["severity"] >= 3 else ("⚠️ [MODÉRÉ]" if m["severity"] == 2 else "ℹ️")
+                exp = f"(expire: {m['expires_at'][:10]})" if m.get("expires_at") else "(permanent)"
+                lines.append(f"  - {sev_icon} [{m['category'].upper()}] {m['content']} {exp}")
+        elif clean_ctx in ("clara", "duo"):
+            lines.append("• Clara : ✅ Santé optimale, aucune douleur active signalée.")
+
+        # 3. Preferences & Goals from CoachMemory facts
         prefs = facts.get("preferences", [])
         if prefs:
-            lines.append("• Préférences déclarées : " + " | ".join(prefs[-4:]))
+            lines.append("• Préférences déclarées : " + " | ".join(prefs[-3:]))
 
-        # Objectifs
         goals = facts.get("active_goals", [])
         if goals:
             lines.append("🎯 Objectifs mémorisés : " + " | ".join(goals[-3:]))
 
-        # Contraintes
-        constraints = facts.get("schedule_constraints", [])
-        if constraints:
-            lines.append("🗓️ Contraintes d'agenda mémorisées : " + " | ".join(constraints[-3:]))
-
-        # Points forts
-        strengths = facts.get("strengths", [])
-        if strengths:
-            lines.append("• Points forts validés : " + " | ".join(strengths[-3:]))
-
-        # Dernières notes
-        notes = self.data.get("recent_coaching_notes", [])
-        if notes:
-            lines.append("• Dernière note coaching : " + notes[-1].get("note", ""))
+        # 4. Recent duo synergy logs
+        if recent_synergies:
+            lines.append("🤝 HISTORIQUE RÉCENT DES SÉANCES EN DUO :")
+            for s in recent_synergies:
+                lines.append(
+                    f"  - [{s['session_date']}] {s['common_workout_type']} : Note symbiose {s['synergy_rating']}/5, "
+                    f"écart d'allure mesuré {s['pacing_delta_sec']}s/km. Louis: '{s['louis_feedback'] or 'RAS'}' | Clara: '{s['clara_feedback'] or 'RAS'}'"
+                )
 
         return "\n".join(lines)
+
+
+def record_feedback(athlete_id: str, raw_text: str) -> Dict[str, Any]:
+    """
+    Extracts an atomic fact, category, severity, and expiration from athlete feedback.
+    - Courbatures / fatigue acute: expires after 4 days.
+    - Transient pain / mild strain: expires after 7 days.
+    - Chronic injuries (tendinite, essuie-glace, genou): permanent (expires_at = None).
+    - Preferences / physiology: permanent (expires_at = None).
+    """
+    clean_id = (athlete_id or "louis").strip().lower()
+    text = raw_text.strip()
+    lower = text.lower()
+
+    # Check for healing / resolution
+    healing_phrases = [
+        "plus mal", "douleur partie", "douleur disparue", "douleurs disparues", "guéri", "guérie",
+        "plus de douleur", "plus de douleurs", "ça ne me fait plus mal", "genou va bien",
+        "jambes vont bien", "plus de gêne", "remis de ma blessure", "rétabli", "totalement récupéré"
+    ]
+    if any(hp in lower for hp in healing_phrases):
+        cleared = AthleteMemoryRepository.clear_category(clean_id, "injury")
+        return {
+            "action": "clear",
+            "athlete_id": clean_id,
+            "category": "injury",
+            "cleared_count": cleared,
+            "message": f"Douleurs marquées résolues pour {clean_id}."
+        }
+
+    # Classification & expiration
+    now = datetime.now()
+    category = "preference"
+    severity = 1
+    expires_at = None
+
+    # Fatigue / courbatures
+    if any(w in lower for w in ["courbature", "fatigue", "épuisé", "crevé", "jambes lourdes", "sommeil difficile", "manque de jus"]):
+        category = "fatigue"
+        severity = 2 if any(w in lower for w in ["très", "énorme", "grosse", "épuisé", "extrême"]) else 1
+        expires_at = (now + timedelta(days=4)).strftime("%Y-%m-%d %H:%M:%S")
+
+    # Injury / pain
+    elif any(w in lower for w in [
+        "mal", "douleur", "genou", "tendon", "rotulien", "essuie-glace", "tfl", "mollet",
+        "cheville", "aponévrose", "périostite", "ischio", "contracture", "entorse", "gêne"
+    ]):
+        category = "injury"
+        if any(w in lower for w in ["essuie-glace", "tendinite", "syndrome", "fracture", "déchirure", "chronique"]):
+            severity = 3 if any(w in lower for w in ["vive", "forte", "aiguë", "très"]) else 2
+            expires_at = None  # Permanent until explicit healing
+        elif any(w in lower for w in ["petite gêne", "légère tension", "tire un peu", "courbature"]):
+            severity = 1
+            expires_at = (now + timedelta(days=7)).strftime("%Y-%m-%d %H:%M:%S")
+        else:
+            severity = 2
+            expires_at = None
+
+    # Physiology
+    elif any(w in lower for w in ["fc max", "fcm", "seuil", "vma", "vdot", "fc repos", "vfc"]):
+        category = "physiology"
+        severity = 1
+        expires_at = None
+
+    # Preference
+    else:
+        category = "preference"
+        severity = 1
+        expires_at = None
+
+    mem_id = AthleteMemoryRepository.record_memory(
+        athlete_id=clean_id,
+        category=category,
+        content=text,
+        severity=severity,
+        expires_at=expires_at,
+    )
+
+    return {
+        "id": mem_id,
+        "athlete_id": clean_id,
+        "category": category,
+        "content": text,
+        "severity": severity,
+        "expires_at": expires_at,
+    }
+
+
+def get_active_memories(athlete_id: str) -> List[Dict[str, Any]]:
+    """Returns all active, non-expired episodic memories for an athlete."""
+    return AthleteMemoryRepository.get_active(athlete_id)
+
+
+def log_duo_session(session_data: Dict[str, Any]) -> int:
+    """Logs a shared duo session to calibrate future pacing synchronization."""
+    return DuoSynergyRepository.log_session(
+        session_date=session_data.get("session_date") or date.today().isoformat(),
+        common_workout_type=session_data.get("common_workout_type") or "recovery",
+        louis_feedback=session_data.get("louis_feedback", ""),
+        clara_feedback=session_data.get("clara_feedback", ""),
+        pacing_delta_sec=int(session_data.get("pacing_delta_sec", 0)),
+        synergy_rating=int(session_data.get("synergy_rating", 5)),
+    )

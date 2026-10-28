@@ -270,6 +270,64 @@ class CoachLLMClient:
             "Ce tag sera automatiquement intercepté par le cockpit sans s'afficher à l'athlète.\n"
         )
 
+        # Ingestion du Moteur Physiologique Déterministe (Python pur)
+        physio = biometric_context.get("physiological_state", {})
+        if physio:
+            system_prompt += "\n=== 📊 MOTEUR PHYSIOLOGIQUE DÉTERMINISTE (PYTHON PUR) ===\n"
+            system_prompt += "RÈGLE ABSOLUE : Ces valeurs sont calculées mathématiquement. Tu ne dois JAMAIS improviser ou contredire ces nombres exacts.\n"
+            
+            vdot = physio.get("vdot")
+            paces = physio.get("paces", {})
+            if vdot and paces:
+                system_prompt += f"• VDOT Jack Daniels officiel : {vdot:.1f}\n"
+                e_low = paces.get('easy_low', {})
+                e_high = paces.get('easy_high', {})
+                m_zone = paces.get('marathon', {})
+                t_zone = paces.get('threshold', {})
+                i_zone = paces.get('interval', {})
+                r_zone = paces.get('repetition', {})
+
+                system_prompt += (
+                    f"• Allures d'entraînement étalonnées (sec/km & min/km) :\n"
+                    f"  - E (Endurance fondamentale) : {e_low.get('pace_formatted')} à {e_high.get('pace_formatted')} ({e_low.get('seconds_per_km')} à {e_high.get('seconds_per_km')} s/km) | FC: {e_low.get('hr_min_bpm')}-{e_high.get('hr_max_bpm')} bpm\n"
+                    f"  - M (Allure Marathon) : {m_zone.get('pace_formatted')} ({m_zone.get('seconds_per_km')} s/km) | FC: {m_zone.get('hr_min_bpm')}-{m_zone.get('hr_max_bpm')} bpm\n"
+                    f"  - T (Seuil Lactique / Threshold) : {t_zone.get('pace_formatted')} ({t_zone.get('seconds_per_km')} s/km) | FC: {t_zone.get('hr_min_bpm')}-{t_zone.get('hr_max_bpm')} bpm\n"
+                    f"  - I (Intervalles VMA) : {i_zone.get('pace_formatted')} ({i_zone.get('seconds_per_km')} s/km) | FC: {i_zone.get('hr_min_bpm')}-{i_zone.get('hr_max_bpm')} bpm\n"
+                    f"  - R (Répétitions d'économie) : {r_zone.get('pace_formatted')} ({r_zone.get('seconds_per_km')} s/km)\n"
+                )
+
+            load = physio.get("load_metrics", {})
+            if load:
+                system_prompt += (
+                    f"• Séries temporelles de Charge (Banister / Gabbett EWMA) :\n"
+                    f"  - CTL (Charge Chronique 42 jours) : {load.get('ctl', 0):.1f}\n"
+                    f"  - ATL (Charge Aiguë 7 jours) : {load.get('atl', 0):.1f}\n"
+                    f"  - TSB (Training Stress Balance / Forme) : {load.get('tsb', 0):+.1f}\n"
+                    f"  - ACWR (Ratio Aigu:Chronique) : {load.get('acwr', 1.0):.2f}"
+                )
+                if load.get("hazard_warning"):
+                    system_prompt += " ⚠️ [ALERTE SURCHARGE CRITIQUE : ACWR > 1.5, DANGER DE BLESSURE]\n"
+                else:
+                    system_prompt += "\n"
+
+            hrv_base = physio.get("hrv_baseline", {})
+            if hrv_base:
+                suppress = hrv_base.get("suppress_intensity", False)
+                system_prompt += (
+                    f"• Dérive VFC (HRV nocturne) :\n"
+                    f"  - Moyenne 30j : {hrv_base.get('baseline_mean', 0):.1f} ms (± {hrv_base.get('baseline_std', 0):.1f} ms) | Seuil bas (-1.5σ) : {hrv_base.get('lower_threshold', 0):.1f} ms\n"
+                    f"  - VFC actuelle : {hrv_base.get('current_rmssd', 'N/D')} ms | Indicateur suppress_intensity = {suppress}\n"
+                )
+                if suppress:
+                    system_prompt += "  🚨 [CONSIGNE STRICTE] VFC sous le seuil d'alerte : TOUTE SÉANCE D'INTENSITÉ EST INTERDITE AUJOURD'HUI. Préconiser un footing régénératif Z1 de 30 min ou du repos complet.\n"
+
+        # Ingestion des Fiches de Doctrine RAG
+        doctrine_rules = biometric_context.get("doctrine_rules", [])
+        if doctrine_rules:
+            system_prompt += "\n=== 📚 DOCTRINE SCIENTIFIQUE D'ENTRAÎNEMENT (RAG LOCAL) ===\n"
+            for doc in doctrine_rules:
+                system_prompt += f"• [{doc.get('title', 'Doctrine')} ({doc.get('topic', '')})] :\n  {doc.get('content', '')}\n"
+
         if biometric_context.get("three_week_plan_generated") or any(k in user_message.lower() for k in ["3 semaine", "trois semaine", "programme", "planifie", "montre", "calendrier"]):
             system_prompt += (
                 "\n=== 🚀 PROGRAMMATION DU CYCLE 3 SEMAINES & SYNCHRONISATION MONTRE GARMIN ===\n"

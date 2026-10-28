@@ -17,6 +17,8 @@ dependencies = [
     "mcp>=1.28.1,<2",
     "fitparse>=1.2.0",
     "duckduckgo-search>=8.1.1",
+    "chromadb>=1.5.9",
+    "pydantic>=2.12.5",
 ]
 
 [project.scripts]

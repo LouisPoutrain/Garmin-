@@ -23,6 +23,10 @@ from garmin_coach.history_analyzer import analyze_long_term_history
 from garmin_coach.temporal import get_temporal_context, format_relative_date_fr, parse_iso_or_local_date
 from garmin_coach.web.web_search import search_sports_science
 from garmin_coach.web.llm_client import CoachLLMClient
+from garmin_coach.physiology import get_complete_physiological_state, get_daniels_paces
+from garmin_coach.memory import get_active_memories, record_feedback, log_duo_session
+from garmin_coach.rag.store import query_doctrine
+from garmin_coach.database.repository import DuoSynergyRepository, AthleteMemoryRepository
 
 STATIC_DIR = Path(__file__).parent / "static"
 
@@ -719,6 +723,53 @@ async def api_chat(request):
 
         biometric_context["three_week_plan_generated"] = plan_triggered
 
+        # === ÉTAPE 1 : Calcul Physiologique Déterministe (Python pur) ===
+        target_ath_id = "clara" if athlete_context == "clara" else "louis"
+        try:
+            physio_state = get_complete_physiological_state(target_ath_id)
+            biometric_context["physiological_state"] = physio_state.model_dump()
+        except Exception as e_phys:
+            print(f"Warning computing deterministic physiological state: {e_phys}")
+            biometric_context["physiological_state"] = {}
+
+        # === ÉTAPE 2 : Contexte Mémoire Épisodique (SQLite) ===
+        try:
+            active_mems = get_active_memories(target_ath_id)
+            biometric_context["active_memories"] = active_mems
+        except Exception as e_mem:
+            print(f"Warning fetching active memories: {e_mem}")
+            biometric_context["active_memories"] = []
+
+        # === ÉTAPE 3 : Doctrine RAG Ciblée (ChromaDB local) ===
+        try:
+            doctrine_topic = None
+            doctrine_query = message
+            phys_data = biometric_context.get("physiological_state", {})
+            hrv_data = phys_data.get("hrv_baseline", {})
+            load_data = phys_data.get("load_metrics", {})
+            
+            if hrv_data.get("suppress_intensity"):
+                doctrine_topic = "hrv"
+                doctrine_query = "baisse vfc et fatigue aiguë protocole de récupération suppression intensité"
+            elif load_data.get("acwr", 1.0) >= 1.4:
+                doctrine_topic = "volume"
+                doctrine_query = "surcharge acwr supérieure à 1.4 répartition volume jack daniels"
+            elif athlete_context == "duo" or any(w in message.lower() for w in ["duo", "couple", "clara", "ensemble"]):
+                doctrine_topic = "duo"
+                doctrine_query = "synchronisation allure et seuil couple croisement allure z2 footing partagé"
+            elif any(w in message.lower() for w in ["80/20", "seiler", "polarisation", "zone 2", "fondamentale"]):
+                doctrine_topic = "polarization"
+                doctrine_query = "distribution polarisée 80/20 seiler zone 2 vs intensité seuil"
+
+            doctrine_res = query_doctrine(doctrine_query, topic=doctrine_topic, n_results=2)
+            biometric_context["doctrine_rules"] = [
+                {"title": d.get("title"), "topic": d.get("topic"), "content": d.get("content")}
+                for d in doctrine_res
+            ]
+        except Exception as e_rag:
+            print(f"Warning querying doctrine RAG: {e_rag}")
+            biometric_context["doctrine_rules"] = []
+
         # 3. Web search if question requires science or user enabled it
         search_results = []
         if use_search:
@@ -747,11 +798,13 @@ async def api_chat(request):
                         athlete_target = upd.get("athlete", athlete_context)
                         if action == "clear_injuries":
                             memory.clear_category("injuries_and_sensitivities")
+                            record_feedback(athlete_target, "plus mal, guérison déclarée")
                             learned_facts.append(f"🩺 Douleurs retirées de la mémoire active ({athlete_target}).")
                         elif action == "add" and fact_text:
                             athlete_prefix = f"[{athlete_target.capitalize()}] " if not fact_text.startswith("[") else ""
                             final_fact = f"{athlete_prefix}{fact_text}"
                             memory.add_fact(cat, final_fact, athlete=athlete_target)
+                            record_feedback(athlete_target, fact_text)
                             learned_facts.append(f"🧠 Mémorisé par le coach ({cat}) : {final_fact}")
                     # Clean the tag from the final response content so the user does not see internal tags
                     result["content"] = re.sub(r'<!--\s*MEMORY_UPDATE:\s*\[.*?\]\s*-->', '', llm_content, flags=re.DOTALL).strip()
@@ -858,11 +911,58 @@ async def api_activity_detail(request):
 
 
 async def api_physiology_acwr(request):
-    """Returns Banister ACWR workload ratio and fatigue analysis."""
+    """Returns Banister ACWR workload ratio, HRV drift baseline, and deterministic state."""
     try:
-        from garmin_coach.physiology import calculate_acwr
-        data = calculate_acwr()
-        return JSONResponse(data)
+        athlete_id = request.query_params.get("athlete", "louis").strip().lower()
+        state = get_complete_physiological_state(athlete_id)
+        return JSONResponse(state.model_dump())
+    except Exception as e:
+        return JSONResponse({"error": str(e)}, status_code=500)
+
+
+async def api_physiology_vdot(request):
+    """Returns Jack Daniels VDOT scores and calibrated training paces."""
+    try:
+        louis_paces = get_daniels_paces("louis")
+        clara_paces = get_daniels_paces("clara")
+        return JSONResponse({
+            "louis": louis_paces.model_dump(),
+            "clara": clara_paces.model_dump(),
+        })
+    except Exception as e:
+        return JSONResponse({"error": str(e)}, status_code=500)
+
+
+async def api_episodic_memories(request):
+    """GET active non-expired memories or POST to record new feedback."""
+    try:
+        if request.method == "POST":
+            body = await request.json()
+            ath_id = body.get("athlete_id", "louis")
+            raw_text = body.get("raw_text", "")
+            if not raw_text:
+                return JSONResponse({"error": "raw_text requis"}, status_code=400)
+            res = record_feedback(ath_id, raw_text)
+            return JSONResponse(res)
+        else:
+            athlete_id = request.query_params.get("athlete", "louis").strip().lower()
+            mems = get_active_memories(athlete_id)
+            return JSONResponse({"athlete_id": athlete_id, "memories": mems})
+    except Exception as e:
+        return JSONResponse({"error": str(e)}, status_code=500)
+
+
+async def api_duo_synergy(request):
+    """GET recent duo synergy logs or POST to log a shared workout debrief."""
+    try:
+        if request.method == "POST":
+            body = await request.json()
+            new_id = log_duo_session(body)
+            return JSONResponse({"status": "success", "id": new_id})
+        else:
+            limit = int(request.query_params.get("limit", 10))
+            logs = DuoSynergyRepository.get_recent(limit)
+            return JSONResponse({"logs": logs})
     except Exception as e:
         return JSONResponse({"error": str(e)}, status_code=500)
 
@@ -872,30 +972,33 @@ async def api_coaching_adaptations(request):
     try:
         from datetime import date
         today_iso = date.today().isoformat()
-        from garmin_coach.physiology import calculate_acwr
         from garmin_coach.adaptation import evaluate_daily_adaptation
         from garmin_coach.database.repository import WorkoutRepository
-        acwr = calculate_acwr()
-        plan = WorkoutRepository.get_all()
+        
+        athlete_id = request.query_params.get("athlete", "louis").strip().lower()
+        state = get_complete_physiological_state(athlete_id)
+        plan = WorkoutRepository.get_all(athlete_id)
         today_session = plan.get(today_iso)
 
-        client = None
+        readiness = 70
+        body_battery = 70
         try:
-            client = get_garmin()
+            client = get_garmin(athlete_id)
             summary = client.get_user_summary(today_iso) or {}
             raw_readiness = client.get_training_readiness(today_iso)
             readiness = raw_readiness[0].get("score", 70) if isinstance(raw_readiness, list) and raw_readiness else 70
             body_battery = summary.get("bodyBatteryMostRecentValue") or summary.get("bodyBatteryAtWakeTime") or 70
         except Exception:
-            readiness = 70
-            body_battery = 70
+            pass
 
         proposal = evaluate_daily_adaptation(
             today_iso=today_iso,
             readiness_score=readiness,
             body_battery=body_battery,
-            acwr_data=acwr,
+            acwr_data=state.load_metrics.model_dump(),
             planned_session=today_session,
+            hrv_analysis=state.hrv_baseline.model_dump(),
+            athlete_id=athlete_id,
         )
         return JSONResponse({"adaptation": proposal})
     except Exception as e:
@@ -953,6 +1056,9 @@ routes = [
     Route("/api/activity/{activity_id}", endpoint=api_activity_detail, methods=["GET"]),
     Route("/api/weekly-plan", endpoint=api_weekly_plan, methods=["GET"]),
     Route("/api/physiology/acwr", endpoint=api_physiology_acwr, methods=["GET"]),
+    Route("/api/physiology/vdot", endpoint=api_physiology_vdot, methods=["GET"]),
+    Route("/api/memories/active", endpoint=api_episodic_memories, methods=["GET", "POST"]),
+    Route("/api/duo/synergy", endpoint=api_duo_synergy, methods=["GET", "POST"]),
     Route("/api/coaching/adaptations", endpoint=api_coaching_adaptations, methods=["GET"]),
     Route("/api/coaching/adaptations/apply", endpoint=api_apply_adaptation, methods=["POST"]),
     Route("/api/coaching/adaptations/dismiss", endpoint=api_dismiss_adaptation, methods=["POST"]),

@@ -111,3 +111,27 @@ CREATE TABLE IF NOT EXISTS coaching_adaptations (
     created_at TEXT DEFAULT CURRENT_TIMESTAMP,
     applied_at TEXT
 );
+
+-- Episodic athlete memories (feedback, injuries, preferences with automatic expiration)
+CREATE TABLE IF NOT EXISTS athlete_memories (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    athlete_id TEXT NOT NULL,           -- 'louis' ou 'clara'
+    category TEXT NOT NULL,             -- 'injury', 'fatigue', 'preference', 'physiology'
+    content TEXT NOT NULL,              -- ex: 'Douleur face externe genou droit après fractionné bitume'
+    severity INTEGER DEFAULT 1,         -- 1 (léger) à 3 (critique)
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    expires_at TIMESTAMP NULL,          -- null = permanent, date = expiration automatique
+    is_active BOOLEAN DEFAULT 1
+);
+
+-- Duo shared session feedback & pacing synergy
+CREATE TABLE IF NOT EXISTS duo_synergy_logs (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    session_date DATE NOT NULL,
+    common_workout_type TEXT NOT NULL,  -- 'threshold_tempo', 'long_run', 'recovery'
+    louis_feedback TEXT,
+    clara_feedback TEXT,
+    pacing_delta_sec INTEGER,           -- écart mesuré vs planifié
+    synergy_rating INTEGER              -- 1 (contre-productif) à 5 (parfaite symbiose)
+);
+

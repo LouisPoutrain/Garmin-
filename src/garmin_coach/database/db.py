@@ -185,6 +185,33 @@ def migrate_schema_to_multi_athlete(conn: sqlite3.Connection):
     if cols and "athlete_id" not in cols:
         conn.execute("ALTER TABLE coaching_adaptations ADD COLUMN athlete_id TEXT NOT NULL DEFAULT 'louis';")
 
+    # 8. athlete_memories table
+    conn.execute("""
+    CREATE TABLE IF NOT EXISTS athlete_memories (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        athlete_id TEXT NOT NULL,
+        category TEXT NOT NULL,
+        content TEXT NOT NULL,
+        severity INTEGER DEFAULT 1,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        expires_at TIMESTAMP NULL,
+        is_active BOOLEAN DEFAULT 1
+    );
+    """)
+
+    # 9. duo_synergy_logs table
+    conn.execute("""
+    CREATE TABLE IF NOT EXISTS duo_synergy_logs (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        session_date DATE NOT NULL,
+        common_workout_type TEXT NOT NULL,
+        louis_feedback TEXT,
+        clara_feedback TEXT,
+        pacing_delta_sec INTEGER,
+        synergy_rating INTEGER
+    );
+    """)
+
     conn.commit()
 
 
@@ -369,7 +396,8 @@ def migrate_from_json_if_needed(conn: sqlite3.Connection):
                             (category, str(fact)),
                         )
                         inserted += 1
-            conn.commit()
-            print(f"✅ Migré {inserted} faits de mémoire depuis {legacy_memory_file.name} vers SQLite.")
+            if inserted > 0:
+                conn.commit()
+                print(f"✅ Migré {inserted} faits de mémoire depuis {legacy_memory_file.name} vers SQLite.")
         except Exception as e:
             print(f"Warning: échec migration legacy memory: {e}")

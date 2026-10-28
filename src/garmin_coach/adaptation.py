@@ -8,6 +8,7 @@ from datetime import date, datetime
 from typing import Any, Dict, Optional
 from garmin_coach.database.db import get_connection
 from garmin_coach.database.repository import WorkoutRepository
+from garmin_coach.rag.store import query_doctrine
 
 
 def evaluate_daily_adaptation(
@@ -16,8 +17,10 @@ def evaluate_daily_adaptation(
     body_battery: int,
     acwr_data: Dict[str, Any],
     planned_session: Optional[Dict[str, Any]],
+    hrv_analysis: Optional[Dict[str, Any]] = None,
+    athlete_id: str = "louis",
 ) -> Optional[Dict[str, Any]]:
-    """Evaluates whether today's session needs physiological adaptation."""
+    """Evaluates whether today's session needs physiological adaptation based on ACWR, HRV and biometrics."""
     if not planned_session:
         return None
 
@@ -31,7 +34,18 @@ def evaluate_daily_adaptation(
 
     acwr_ratio = acwr_data.get("acwr_ratio", 1.0)
     trigger_reasons = []
+    doctrine_topic = "volume"
+    doctrine_query = "gestion de charge et surcompensation"
 
+    # HRV nocturnal drift check
+    if hrv_analysis and hrv_analysis.get("suppress_intensity"):
+        trigger_reasons.append(
+            f"Dérive VFC critique (HRV {hrv_analysis.get('current_rmssd', 'N/D')} ms < seuil bas {hrv_analysis.get('lower_threshold', 'N/D')} ms : suppression stricte de l'intensité requise)"
+        )
+        doctrine_topic = "hrv"
+        doctrine_query = "baisse vfc et fatigue aiguë élevée protocole de récupération"
+
+    # Readiness & Energy
     if readiness_score < 45:
         trigger_reasons.append(f"Score de préparation critique ({readiness_score}/100)")
     elif readiness_score < 55 and is_key:
@@ -40,15 +54,37 @@ def evaluate_daily_adaptation(
     if body_battery < 35:
         trigger_reasons.append(f"Réserves d'énergie faibles (Body Battery {body_battery}%)")
 
-    if acwr_ratio > 1.4:
-        trigger_reasons.append(f"Charge aiguë trop forte (ACWR {acwr_ratio})")
+    # ACWR checks (Banister / Gabbett EWMA)
+    if acwr_ratio >= 1.5:
+        trigger_reasons.append(f"Alerte Surcharge Aiguë Critique : ACWR = {acwr_ratio:.2f} (> 1.5 zone rouge de blessure)")
+        doctrine_topic = "volume"
+        doctrine_query = "surcharge aiguë acwr supérieure à 1.5 et distribution de volume daniels"
+    elif acwr_ratio > 1.35:
+        trigger_reasons.append(f"Charge aiguë trop forte (ACWR = {acwr_ratio:.2f})")
 
     if not trigger_reasons:
         return None
 
+    # Query expert doctrine from local ChromaDB RAG
+    doctrine_docs = []
+    try:
+        results = query_doctrine(doctrine_query, topic=doctrine_topic, n_results=2)
+        for r in results:
+            doctrine_docs.append({
+                "title": r.get("title"),
+                "topic": r.get("topic"),
+                "excerpt": r.get("content")[:280] + "...",
+            })
+    except Exception as e_rag:
+        print(f"Doctrine query warning: {e_rag}")
+
     # Generate adaptation proposal
     reason_str = " & ".join(trigger_reasons)
     original_title = f"{planned_session.get('type')} ({planned_session.get('duration')})"
+
+    doctrine_context_text = ""
+    if doctrine_docs:
+        doctrine_context_text = f"\n\n📚 **Doctrine scientifique ({doctrine_docs[0].get('title', '')})** : {doctrine_docs[0].get('excerpt', '')}"
 
     if is_key or "fractionné" in workout_type.lower() or "seuil" in workout_type.lower():
         proposed_title = "Footing Régénératif Z1 (30 min)"
@@ -64,23 +100,25 @@ def evaluate_daily_adaptation(
         }
         coach_advice = (
             f"⚠️ Vos voyants physiologiques recommandent d'alléger l'effort aujourd'hui ({reason_str}). "
-            "Convertir cette séance intensive en footing régénératif Zone 1 permettra d'assimiler la charge sans risquer de surcharge tendineuse."
+            f"Convertir cette séance intensive en footing régénératif Zone 1 permettra d'assimiler la charge sans risquer de surcharge tendineuse.{doctrine_context_text}"
         )
     else:
         proposed_title = "Repos complet & Récupération"
         proposed_structure = None
         coach_advice = (
             f"💤 Alerte fatigue détectée ({reason_str}). "
-            "Il est vivement conseillé de faire une journée off complète pour restaurer votre système nerveux et votre sommeil."
+            f"Il est vivement conseillé de faire une journée off complète pour restaurer votre système nerveux et votre sommeil.{doctrine_context_text}"
         )
 
     proposal = {
+        "athlete_id": athlete_id,
         "date": today_iso,
         "trigger_reason": reason_str,
         "original_workout": original_title,
         "proposed_workout": proposed_title,
         "proposed_structure": proposed_structure,
         "coach_advice": coach_advice,
+        "doctrine_rules": doctrine_docs,
         "status": "pending",
     }
 

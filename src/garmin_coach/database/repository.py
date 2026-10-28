@@ -285,3 +285,159 @@ class BiometricsRepository:
             }
         finally:
             conn.close()
+
+
+class AthleteMemoryRepository:
+    """Handles episodic memory persistence, severity weighting, and automatic expiration."""
+
+    @staticmethod
+    def record_memory(
+        athlete_id: str,
+        category: str,
+        content: str,
+        severity: int = 1,
+        expires_at: Optional[str] = None,
+    ) -> int:
+        init_db()
+        conn = get_connection()
+        clean_id = (athlete_id or "louis").strip().lower()
+        try:
+            cur = conn.cursor()
+            cur.execute(
+                """
+                INSERT INTO athlete_memories
+                (athlete_id, category, content, severity, expires_at, is_active)
+                VALUES (?, ?, ?, ?, ?, 1)
+                """,
+                (clean_id, category.strip().lower(), content.strip(), severity, expires_at),
+            )
+            conn.commit()
+            return cur.lastrowid
+        finally:
+            conn.close()
+
+    @staticmethod
+    def get_active(athlete_id: str) -> List[Dict[str, Any]]:
+        """Returns active, non-expired memories for an athlete."""
+        init_db()
+        conn = get_connection()
+        clean_id = (athlete_id or "louis").strip().lower()
+        try:
+            rows = conn.execute(
+                """
+                SELECT id, athlete_id, category, content, severity, created_at, expires_at, is_active
+                FROM athlete_memories
+                WHERE athlete_id = ? AND is_active = 1 AND (expires_at IS NULL OR expires_at > CURRENT_TIMESTAMP)
+                ORDER BY severity DESC, created_at DESC
+                """,
+                (clean_id,),
+            ).fetchall()
+            return [
+                {
+                    "id": r["id"],
+                    "athlete_id": r["athlete_id"],
+                    "category": r["category"],
+                    "content": r["content"],
+                    "severity": r["severity"],
+                    "created_at": r["created_at"],
+                    "expires_at": r["expires_at"],
+                    "is_active": bool(r["is_active"]),
+                }
+                for r in rows
+            ]
+        finally:
+            conn.close()
+
+    @staticmethod
+    def deactivate(memory_id: int) -> bool:
+        init_db()
+        conn = get_connection()
+        try:
+            cur = conn.cursor()
+            cur.execute("UPDATE athlete_memories SET is_active = 0 WHERE id = ?", (memory_id,))
+            conn.commit()
+            return cur.rowcount > 0
+        finally:
+            conn.close()
+
+    @staticmethod
+    def clear_category(athlete_id: str, category: str) -> int:
+        init_db()
+        conn = get_connection()
+        clean_id = (athlete_id or "louis").strip().lower()
+        try:
+            cur = conn.cursor()
+            cur.execute(
+                "UPDATE athlete_memories SET is_active = 0 WHERE athlete_id = ? AND category = ?",
+                (clean_id, category.strip().lower()),
+            )
+            conn.commit()
+            return cur.rowcount
+        finally:
+            conn.close()
+
+
+class DuoSynergyRepository:
+    """Handles shared duo session feedback, pacing synchronization, and synergy ratings."""
+
+    @staticmethod
+    def log_session(
+        session_date: str,
+        common_workout_type: str,
+        louis_feedback: str = "",
+        clara_feedback: str = "",
+        pacing_delta_sec: int = 0,
+        synergy_rating: int = 5,
+    ) -> int:
+        init_db()
+        conn = get_connection()
+        try:
+            cur = conn.cursor()
+            cur.execute(
+                """
+                INSERT INTO duo_synergy_logs
+                (session_date, common_workout_type, louis_feedback, clara_feedback, pacing_delta_sec, synergy_rating)
+                VALUES (?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    session_date,
+                    common_workout_type,
+                    louis_feedback.strip(),
+                    clara_feedback.strip(),
+                    pacing_delta_sec,
+                    max(1, min(synergy_rating, 5)),
+                ),
+            )
+            conn.commit()
+            return cur.lastrowid
+        finally:
+            conn.close()
+
+    @staticmethod
+    def get_recent(limit: int = 10) -> List[Dict[str, Any]]:
+        init_db()
+        conn = get_connection()
+        try:
+            rows = conn.execute(
+                """
+                SELECT id, session_date, common_workout_type, louis_feedback, clara_feedback, pacing_delta_sec, synergy_rating
+                FROM duo_synergy_logs
+                ORDER BY session_date DESC
+                LIMIT ?
+                """,
+                (limit,),
+            ).fetchall()
+            return [
+                {
+                    "id": r["id"],
+                    "session_date": str(r["session_date"]),
+                    "common_workout_type": r["common_workout_type"],
+                    "louis_feedback": r["louis_feedback"] or "",
+                    "clara_feedback": r["clara_feedback"] or "",
+                    "pacing_delta_sec": r["pacing_delta_sec"],
+                    "synergy_rating": r["synergy_rating"],
+                }
+                for r in rows
+            ]
+        finally:
+            conn.close()
