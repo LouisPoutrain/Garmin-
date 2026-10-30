@@ -1063,34 +1063,6 @@ async def api_test_briefing(request):
         return JSONResponse({"error": str(e)}, status_code=500)
 
 
-routes = [
-    Route("/", endpoint=index, methods=["GET"]),
-    Route("/api/status", endpoint=api_status, methods=["GET"]),
-    Route("/api/biometrics", endpoint=api_biometrics, methods=["GET"]),
-    Route("/api/activities", endpoint=api_activities, methods=["GET"]),
-    Route("/api/activity/{activity_id}", endpoint=api_activity_detail, methods=["GET"]),
-    Route("/api/weekly-plan", endpoint=api_weekly_plan, methods=["GET"]),
-    Route("/api/physiology/acwr", endpoint=api_physiology_acwr, methods=["GET"]),
-    Route("/api/physiology/vdot", endpoint=api_physiology_vdot, methods=["GET"]),
-    Route("/api/memories/active", endpoint=api_episodic_memories, methods=["GET", "POST"]),
-    Route("/api/duo/synergy", endpoint=api_duo_synergy, methods=["GET", "POST"]),
-    Route("/api/coaching/adaptations", endpoint=api_coaching_adaptations, methods=["GET"]),
-    Route("/api/coaching/adaptations/apply", endpoint=api_apply_adaptation, methods=["POST"]),
-    Route("/api/coaching/adaptations/dismiss", endpoint=api_dismiss_adaptation, methods=["POST"]),
-    Route("/api/notifications/test-briefing", endpoint=api_test_briefing, methods=["POST"]),
-    Route("/api/calendar/schedule", endpoint=api_schedule_workout, methods=["POST"]),
-    Route("/api/calendar/generate-plan", endpoint=api_generate_plan, methods=["POST"]),
-    Route("/api/calendar/manual-toggle", endpoint=api_toggle_manual_completion, methods=["POST"]),
-    Route("/api/chat", endpoint=api_chat, methods=["POST"]),
-    Route("/api/memory", endpoint=api_memory, methods=["GET"]),
-    Route("/api/memory/fact", endpoint=api_add_fact, methods=["POST"]),
-    Route("/api/memory/fact/remove", endpoint=api_remove_fact, methods=["POST"]),
-    Route("/api/memory/reset", endpoint=api_reset_memory, methods=["POST"]),
-    Route("/api/history", endpoint=api_history_profile, methods=["GET"]),
-    Route("/api/auth/pin", endpoint=api_auth_pin, methods=["POST"]),
-    Mount("/static", app=StaticFiles(directory=STATIC_DIR), name="static"),
-]
-
 PIN_LOCK_HTML = """<!DOCTYPE html>
 <html lang="fr" class="dark">
 <head>
@@ -1189,6 +1161,34 @@ class PinAuthMiddleware(BaseHTTPMiddleware):
 
         return HTMLResponse(PIN_LOCK_HTML, status_code=401)
 
+
+routes = [
+    Route("/", endpoint=index, methods=["GET"]),
+    Route("/api/status", endpoint=api_status, methods=["GET"]),
+    Route("/api/biometrics", endpoint=api_biometrics, methods=["GET"]),
+    Route("/api/activities", endpoint=api_activities, methods=["GET"]),
+    Route("/api/activity/{activity_id}", endpoint=api_activity_detail, methods=["GET"]),
+    Route("/api/weekly-plan", endpoint=api_weekly_plan, methods=["GET"]),
+    Route("/api/physiology/acwr", endpoint=api_physiology_acwr, methods=["GET"]),
+    Route("/api/physiology/vdot", endpoint=api_physiology_vdot, methods=["GET"]),
+    Route("/api/memories/active", endpoint=api_episodic_memories, methods=["GET", "POST"]),
+    Route("/api/duo/synergy", endpoint=api_duo_synergy, methods=["GET", "POST"]),
+    Route("/api/coaching/adaptations", endpoint=api_coaching_adaptations, methods=["GET"]),
+    Route("/api/coaching/adaptations/apply", endpoint=api_apply_adaptation, methods=["POST"]),
+    Route("/api/coaching/adaptations/dismiss", endpoint=api_dismiss_adaptation, methods=["POST"]),
+    Route("/api/notifications/test-briefing", endpoint=api_test_briefing, methods=["POST"]),
+    Route("/api/calendar/schedule", endpoint=api_schedule_workout, methods=["POST"]),
+    Route("/api/calendar/generate-plan", endpoint=api_generate_plan, methods=["POST"]),
+    Route("/api/calendar/manual-toggle", endpoint=api_toggle_manual_completion, methods=["POST"]),
+    Route("/api/chat", endpoint=api_chat, methods=["POST"]),
+    Route("/api/memory", endpoint=api_memory, methods=["GET"]),
+    Route("/api/memory/fact", endpoint=api_add_fact, methods=["POST"]),
+    Route("/api/memory/fact/remove", endpoint=api_remove_fact, methods=["POST"]),
+    Route("/api/memory/reset", endpoint=api_reset_memory, methods=["POST"]),
+    Route("/api/history", endpoint=api_history_profile, methods=["GET"]),
+    Route("/api/auth/pin", endpoint=api_auth_pin, methods=["POST"]),
+    Mount("/static", app=StaticFiles(directory=STATIC_DIR), name="static"),
+]
 
 middleware = [
     Middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"]),

@@ -33,17 +33,17 @@ COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
     UV_SYSTEM_PYTHON=1 \
+    PYTHONPATH="/app/src" \
     HOST=0.0.0.0 \
     PORT=5050
 
-# Copy dependency definition
+# Copy project definition and source code for installation
 COPY pyproject.toml README.md ./
+COPY src/ ./src/
 
-# Install python dependencies
+# Install application and dependencies using uv
 RUN uv pip install -e .
 
-# Copy application code, knowledge doctrine, and athlete profiles
-COPY src/ ./src/
 COPY knowledge/ ./knowledge/
 COPY athlete_profile.json athlete_profile_clara.json ./
 

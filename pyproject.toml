@@ -19,6 +19,8 @@ dependencies = [
     "duckduckgo-search>=8.1.1",
     "chromadb>=1.5.9",
     "pydantic>=2.12.5",
+    "starlette>=0.37.0",
+    "uvicorn>=0.29.0",
 ]
 
 [project.scripts]
