@@ -325,6 +325,11 @@ class CoachLLMClient:
         doctrine_rules = biometric_context.get("doctrine_rules", [])
         if doctrine_rules:
             system_prompt += "\n=== 📚 DOCTRINE SCIENTIFIQUE D'ENTRAÎNEMENT (RAG LOCAL) ===\n"
+            system_prompt += (
+                "RÈGLE MÉTHODOLOGIQUE DU COACH : Appuie et cite explicitement les règles d'entraînement expertes issues de la doctrine ci-dessous "
+                "(ex. polarisation 80/20 de Seiler, répartition des volumes de Jack Daniels, protocole de récupération VFC ou synchronisation d'allures du duo) "
+                "pour justifier scientifiquement ton analyse et tes adaptations d'allures/séances.\n"
+            )
             for doc in doctrine_rules:
                 system_prompt += f"• [{doc.get('title', 'Doctrine')} ({doc.get('topic', '')})] :\n  {doc.get('content', '')}\n"
 

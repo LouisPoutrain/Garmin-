@@ -2,6 +2,8 @@
 
 import os
 import json
+import re
+from contextlib import asynccontextmanager
 from datetime import date
 from pathlib import Path
 from typing import Dict, Any
@@ -25,8 +27,9 @@ from garmin_coach.web.web_search import search_sports_science
 from garmin_coach.web.llm_client import CoachLLMClient
 from garmin_coach.physiology import get_complete_physiological_state, get_daniels_paces
 from garmin_coach.memory import get_active_memories, record_feedback, log_duo_session
-from garmin_coach.rag.store import query_doctrine
+from garmin_coach.rag.store import query_doctrine, get_doctrine_store
 from garmin_coach.database.repository import DuoSynergyRepository, AthleteMemoryRepository
+from garmin_coach.database.db import init_db
 
 STATIC_DIR = Path(__file__).parent / "static"
 
@@ -742,30 +745,37 @@ async def api_chat(request):
 
         # === ÉTAPE 3 : Doctrine RAG Ciblée (ChromaDB local) ===
         try:
-            doctrine_topic = None
-            doctrine_query = message
+            msg_low = message.lower()
             phys_data = biometric_context.get("physiological_state", {})
             hrv_data = phys_data.get("hrv_baseline", {})
             load_data = phys_data.get("load_metrics", {})
             
-            if hrv_data.get("suppress_intensity"):
-                doctrine_topic = "hrv"
-                doctrine_query = "baisse vfc et fatigue aiguë protocole de récupération suppression intensité"
-            elif load_data.get("acwr", 1.0) >= 1.4:
-                doctrine_topic = "volume"
-                doctrine_query = "surcharge acwr supérieure à 1.4 répartition volume jack daniels"
-            elif athlete_context == "duo" or any(w in message.lower() for w in ["duo", "couple", "clara", "ensemble"]):
-                doctrine_topic = "duo"
-                doctrine_query = "synchronisation allure et seuil couple croisement allure z2 footing partagé"
-            elif any(w in message.lower() for w in ["80/20", "seiler", "polarisation", "zone 2", "fondamentale"]):
-                doctrine_topic = "polarization"
-                doctrine_query = "distribution polarisée 80/20 seiler zone 2 vs intensité seuil"
+            queries = []
+            if hrv_data.get("suppress_intensity") or any(w in msg_low for w in ["vfc", "hrv", "baisse", "fatigue", "tsb"]):
+                queries.append(("protocole baisse VFC récupération suppression intensité seuil Stephen Seiler", "hrv"))
+            if athlete_context == "duo" or any(w in msg_low for w in ["duo", "couple", "clara", "louis", "partag"]):
+                queries.append(("synchronisation allures seuil et footing couple croisement allures duo", "duo"))
+            if any(w in msg_low for w in ["seiler", "80/20", "polarisation", "zone 2"]):
+                queries.append(("modèle polarisé 80/20 Stephen Seiler zone 2 et intensité", "polarization"))
+            if load_data.get("acwr", 1.0) >= 1.4 or any(w in msg_low for w in ["volume", "daniels", "acwr", "charge", "seuil"]):
+                queries.append(("répartition volume entraînement Jack Daniels seuil et fractionné", "volume"))
 
-            doctrine_res = query_doctrine(doctrine_query, topic=doctrine_topic, n_results=2)
-            biometric_context["doctrine_rules"] = [
-                {"title": d.get("title"), "topic": d.get("topic"), "content": d.get("content")}
-                for d in doctrine_res
-            ]
+            collected_rules = []
+            seen_titles = set()
+            if queries:
+                for q_text, q_topic in queries:
+                    res = query_doctrine(q_text, topic=q_topic, n_results=2)
+                    for d in res:
+                        t = d.get("title")
+                        if t and t not in seen_titles:
+                            seen_titles.add(t)
+                            collected_rules.append({"title": t, "topic": d.get("topic"), "content": d.get("content")})
+            else:
+                res = query_doctrine(message, n_results=2)
+                for d in res:
+                    collected_rules.append({"title": d.get("title"), "topic": d.get("topic"), "content": d.get("content")})
+
+            biometric_context["doctrine_rules"] = collected_rules[:4]
         except Exception as e_rag:
             print(f"Warning querying doctrine RAG: {e_rag}")
             biometric_context["doctrine_rules"] = []
@@ -1079,7 +1089,18 @@ middleware = [
     Middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"]),
 ]
 
-app = Starlette(routes=routes, middleware=middleware)
+
+@asynccontextmanager
+async def lifespan(app: Starlette):
+    """Initializes SQLite schema, performs migrations, and indexes RAG doctrine on startup."""
+    print("\n📦 Initialisation du système Garmin Coach au démarrage...")
+    init_db()
+    store = get_doctrine_store()
+    print(f"📚 RAG Doctrine opérationnel : {store.collection.count()} fiches expertes prêtes dans ChromaDB.\n")
+    yield
+
+
+app = Starlette(routes=routes, middleware=middleware, lifespan=lifespan)
 
 
 def run_web(host: str = "127.0.0.1", port: int = 5050):
