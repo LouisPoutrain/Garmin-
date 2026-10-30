@@ -1,42 +1,66 @@
-# Use Python 3.12 slim image for smaller size
-FROM python:3.12-slim
+# ==============================================================================
+# Multi-Stage Production Dockerfile for Garmin Duo Coach Platform
+# ==============================================================================
 
-# Set working directory
+# ------------------------------------------------------------------------------
+# Stage 1: Build React/TypeScript Telemetry Frontend
+# ------------------------------------------------------------------------------
+FROM node:20-slim AS frontend-builder
+WORKDIR /app/frontend
+
+COPY frontend/package*.json ./
+RUN npm ci
+
+COPY frontend/ ./
+RUN npm run build
+
+# ------------------------------------------------------------------------------
+# Stage 2: Production Python 3.12 Runtime
+# ------------------------------------------------------------------------------
+FROM python:3.12-slim AS runner
+
 WORKDIR /app
 
-# Install uv for faster dependency management
-# https://github.com/astral-sh/uv
+# Install system dependencies (curl for container healthcheck)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Astral uv for ultra-fast package management
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
 
-# Set environment variables
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
-    UV_SYSTEM_PYTHON=1
+    UV_SYSTEM_PYTHON=1 \
+    HOST=0.0.0.0 \
+    PORT=5050
 
-# Copy dependency files and README first for better layer caching
+# Copy dependency definition
 COPY pyproject.toml README.md ./
 
-# Copy the application source code (needed for editable install)
-COPY src/ ./src/
-
-# Install dependencies using uv
+# Install python dependencies
 RUN uv pip install -e .
 
-# Copy test files (optional, for testing in container)
-COPY tests/ ./tests/
-COPY pytest.ini ./
+# Copy application code, knowledge doctrine, and athlete profiles
+COPY src/ ./src/
+COPY knowledge/ ./knowledge/
+COPY athlete_profile.json athlete_profile_clara.json ./
 
-# Create directory for Garmin tokens
-RUN mkdir -p /root/.garminconnect && \
-    chmod 700 /root/.garminconnect
+# Copy compiled frontend telemetry assets from Stage 1 into the static directory
+COPY --from=frontend-builder /app/src/garmin_coach/web/static ./src/garmin_coach/web/static
 
-# Expose the HTTP port. The image defaults to stdio (Claude Desktop, Inspector);
-# set GARMIN_MCP_TRANSPORT=streamable-http to serve over this port (e.g. in k8s).
-# EXPOSE 8000
+# Create directories for persistent storage and tokens
+RUN mkdir -p /app/data /root/.garminconnect /root/.garminconnect_clara
 
-# Set the entrypoint to run the MCP server
-ENTRYPOINT ["garmin-mcp"]
+# Mount point for persistent storage (SQLite, ChromaDB, Memories)
+VOLUME ["/app/data"]
 
-# Health check (optional - adjust based on your needs)
-# HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-#   CMD python -c "import sys; sys.exit(0)"
+EXPOSE 5050
+
+# Container Healthcheck
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+  CMD curl -f http://127.0.0.1:${PORT:-5050}/api/status || exit 1
+
+# Launch Garmin Coach Web Server
+CMD ["python", "-m", "garmin_coach.web.app"]

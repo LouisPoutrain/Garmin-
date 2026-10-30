@@ -77,6 +77,45 @@ def get_athlete_token_base64_path(athlete_id: str = "louis") -> str:
     return resolve_token_path(f"~/.garminconnect_{clean_id}_base64")
 
 
+def restore_tokens_from_env_if_needed() -> None:
+    """Restores OAuth token directories and files from environment variables if present."""
+    import base64
+    athletes = [
+        ("louis", ["GARMIN_TOKENS_BASE64", "GARMINTOKENS_BASE64_VAL", "GARMIN_BASE64"]),
+        ("clara", ["GARMIN_CLARA_TOKENS_BASE64", "GARMINTOKENS_CLARA_BASE64_VAL", "GARMIN_CLARA_BASE64"]),
+    ]
+    for athlete_id, env_vars in athletes:
+        raw_b64 = None
+        for ev in env_vars:
+            val = os.getenv(ev)
+            if val and len(val.strip()) > 20:
+                raw_b64 = val.strip()
+                break
+        if not raw_b64:
+            continue
+
+        target_dir = Path(get_athlete_token_path(athlete_id))
+        target_b64_file = Path(get_athlete_token_base64_path(athlete_id))
+
+        token_json_file = target_dir / "garmin_tokens.json" if target_dir.suffix != ".json" else target_dir
+        if not token_json_file.exists():
+            try:
+                decoded = base64.b64decode(raw_b64).decode("utf-8")
+                target_dir.mkdir(parents=True, exist_ok=True)
+                os.chmod(target_dir, 0o700)
+                with open(token_json_file, "w", encoding="utf-8") as f:
+                    f.write(decoded)
+                os.chmod(token_json_file, 0o600)
+
+                target_b64_file.parent.mkdir(parents=True, exist_ok=True)
+                with open(target_b64_file, "w", encoding="utf-8") as f:
+                    f.write(raw_b64)
+                os.chmod(target_b64_file, 0o600)
+                print(f"✓ Tokens Garmin pour {athlete_id.capitalize()} restaurés depuis la variable d'environnement")
+            except Exception as e:
+                print(f"⚠️ Erreur lors de la restauration des tokens pour {athlete_id}: {e}")
+
+
 def token_exists(token_path: str = None) -> bool:
     """Check if token directory or file exists.
 

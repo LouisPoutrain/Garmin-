@@ -6,14 +6,15 @@ import re
 from contextlib import asynccontextmanager
 from datetime import date
 from pathlib import Path
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 
 from starlette.applications import Starlette
-from starlette.responses import JSONResponse, FileResponse
+from starlette.responses import JSONResponse, FileResponse, HTMLResponse
 from starlette.routing import Route, Mount
 from starlette.staticfiles import StaticFiles
 from starlette.middleware import Middleware
 from starlette.middleware.cors import CORSMiddleware
+from starlette.middleware.base import BaseHTTPMiddleware
 
 from garmin_mcp import token_utils
 from garminconnect import Garmin
@@ -1086,11 +1087,112 @@ routes = [
     Route("/api/memory/fact/remove", endpoint=api_remove_fact, methods=["POST"]),
     Route("/api/memory/reset", endpoint=api_reset_memory, methods=["POST"]),
     Route("/api/history", endpoint=api_history_profile, methods=["GET"]),
+    Route("/api/auth/pin", endpoint=api_auth_pin, methods=["POST"]),
     Mount("/static", app=StaticFiles(directory=STATIC_DIR), name="static"),
 ]
 
+PIN_LOCK_HTML = """<!DOCTYPE html>
+<html lang="fr" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Garmin Duo • Accès Sécurisé</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; }
+    body { background: #0B0E14; color: #F1F5F9; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 1.5rem; }
+    .card { background: #121722; border: 1px solid rgba(255,255,255,0.08); border-radius: 1rem; padding: 2rem; max-width: 360px; width: 100%; box-shadow: 0 20px 40px -15px rgba(0,0,0,0.7); text-align: center; }
+    .badge { display: inline-flex; align-items: center; gap: 0.5rem; font-size: 0.65rem; letter-spacing: 0.15em; text-transform: uppercase; color: #38BDF8; background: rgba(56,189,248,0.1); border: 1px solid rgba(56,189,248,0.25); border-radius: 9999px; padding: 0.35rem 0.75rem; margin-bottom: 1.25rem; }
+    .dot { width: 6px; height: 6px; border-radius: 50%; background: #38BDF8; box-shadow: 0 0 8px #38BDF8; }
+    h1 { font-size: 1.1rem; font-weight: 700; letter-spacing: 0.05em; margin-bottom: 0.5rem; color: #FFFFFF; }
+    p { font-size: 0.75rem; color: #94A3B8; line-height: 1.5; margin-bottom: 1.5rem; }
+    input { width: 100%; background: #080A0F; border: 1px solid rgba(255,255,255,0.15); border-radius: 0.5rem; padding: 0.75rem; font-size: 1.25rem; text-align: center; color: #F59E0B; letter-spacing: 0.3em; margin-bottom: 1rem; outline: none; transition: border-color 0.2s; }
+    input:focus { border-color: #38BDF8; }
+    button { width: 100%; background: linear-gradient(135deg, #0284C7, #2563EB); color: #FFF; border: none; border-radius: 0.5rem; padding: 0.75rem; font-size: 0.85rem; font-weight: 600; cursor: pointer; letter-spacing: 0.08em; transition: opacity 0.2s; }
+    button:hover { opacity: 0.9; }
+    .error { color: #F43F5E; font-size: 0.7rem; margin-top: 0.75rem; display: none; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="badge"><span class="dot"></span>GARMIN DUO TELEMETRY</div>
+    <h1>ACCÈS COCKPIT DUO</h1>
+    <p>Ce cockpit de télémétrie sportive est protégé. Entrez le code PIN du binôme pour déverrouiller l'accès.</p>
+    <form id="pin-form" onsubmit="unlock(event)">
+      <input type="password" id="pin-input" placeholder="••••" maxlength="8" autofocus required />
+      <button type="submit">DÉVERROUILLER</button>
+      <div id="error-msg" class="error">Code PIN incorrect</div>
+    </form>
+  </div>
+  <script>
+    async function unlock(e) {
+      e.preventDefault();
+      const pin = document.getElementById('pin-input').value;
+      const res = await fetch('/api/auth/pin', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pin })
+      });
+      if (res.ok) {
+        document.cookie = "coach_pin=" + pin + "; path=/; max-age=" + (86400 * 365) + "; SameSite=Lax";
+        window.location.reload();
+      } else {
+        document.getElementById('error-msg').style.display = 'block';
+      }
+    }
+  </script>
+</body>
+</html>
+"""
+
+
+async def api_auth_pin(request):
+    """Validates the Duo Access PIN for protected cloud deployments."""
+    try:
+        data = await request.json()
+        pin = str(data.get("pin", "")).strip()
+        expected = os.getenv("COACH_AUTH_PIN", "").strip()
+        if expected and pin == expected:
+            res = JSONResponse({"status": "ok", "authenticated": True})
+            res.set_cookie("coach_pin", expected, max_age=86400 * 365, httponly=False, samesite="lax")
+            return res
+        return JSONResponse({"status": "error", "error": "Code PIN incorrect"}, status_code=401)
+    except Exception as e:
+        return JSONResponse({"status": "error", "error": str(e)}, status_code=400)
+
+
+class PinAuthMiddleware(BaseHTTPMiddleware):
+    """Enforces an optional Duo Access PIN if COACH_AUTH_PIN is set in environment."""
+
+    async def dispatch(self, request, call_next):
+        expected_pin = os.getenv("COACH_AUTH_PIN", "").strip()
+        if not expected_pin:
+            return await call_next(request)
+
+        path = request.url.path
+        if path in ("/api/auth/pin", "/favicon.ico", "/favicon.svg") or path.startswith("/static/"):
+            return await call_next(request)
+
+        provided_pin = (
+            request.cookies.get("coach_pin")
+            or request.headers.get("X-Coach-Pin")
+            or request.query_params.get("pin")
+        )
+
+        if provided_pin == expected_pin:
+            response = await call_next(request)
+            if request.query_params.get("pin") == expected_pin:
+                response.set_cookie("coach_pin", expected_pin, max_age=86400 * 365, httponly=False, samesite="lax")
+            return response
+
+        if path.startswith("/api/"):
+            return JSONResponse({"status": "error", "error": "Code d'accès PIN requis"}, status_code=401)
+
+        return HTMLResponse(PIN_LOCK_HTML, status_code=401)
+
+
 middleware = [
     Middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"]),
+    Middleware(PinAuthMiddleware),
 ]
 
 
@@ -1098,6 +1200,7 @@ middleware = [
 async def lifespan(app: Starlette):
     """Initializes SQLite schema, performs migrations, and indexes RAG doctrine on startup."""
     print("\n📦 Initialisation du système Garmin Coach au démarrage...")
+    token_utils.restore_tokens_from_env_if_needed()
     init_db()
     store = get_doctrine_store()
     print(f"📚 RAG Doctrine opérationnel : {store.collection.count()} fiches expertes prêtes dans ChromaDB.\n")
@@ -1120,15 +1223,23 @@ def get_local_ip() -> str:
         return "127.0.0.1"
 
 
-def run_web(host: str = "0.0.0.0", port: int = 5050):
+def run_web(host: Optional[str] = None, port: Optional[int] = None):
     import uvicorn
+    if host is None:
+        host = os.getenv("HOST", "0.0.0.0")
+    if port is None:
+        port = int(os.getenv("PORT", "5050"))
+
     local_ip = get_local_ip()
     print(f"\n🚀 Lancement de l'interface Garmin Coach :")
+    print(f"   • Port                      : {port}")
     print(f"   • Accès local (ce Mac)      : http://localhost:{port}")
     if host in ("0.0.0.0", local_ip):
         print(f"   • Accès Duo (Clara / Wi-Fi) : http://{local_ip}:{port}")
         print(f"   • Accès direct Clara        : http://{local_ip}:{port}/?athlete=clara")
         print(f"   • Accès direct Duo          : http://{local_ip}:{port}/?athlete=duo")
+    if os.getenv("COACH_AUTH_PIN"):
+        print(f"   🔒 Protection PIN active     : Code requis à la première connexion")
     print()
     uvicorn.run("garmin_coach.web.app:app", host=host, port=port, reload=False)
 
