@@ -1107,9 +1107,29 @@ async def lifespan(app: Starlette):
 app = Starlette(routes=routes, middleware=middleware, lifespan=lifespan)
 
 
-def run_web(host: str = "127.0.0.1", port: int = 5050):
+def get_local_ip() -> str:
+    """Detects local LAN IP address for easy mobile/remote access."""
+    import socket
+    try:
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.connect(("8.8.8.8", 80))
+        ip = s.getsockname()[0]
+        s.close()
+        return ip
+    except Exception:
+        return "127.0.0.1"
+
+
+def run_web(host: str = "0.0.0.0", port: int = 5050):
     import uvicorn
-    print(f"\n🚀 Lancement de l'interface Garmin Coach sur http://{host}:{port}\n")
+    local_ip = get_local_ip()
+    print(f"\n🚀 Lancement de l'interface Garmin Coach :")
+    print(f"   • Accès local (ce Mac)      : http://localhost:{port}")
+    if host in ("0.0.0.0", local_ip):
+        print(f"   • Accès Duo (Clara / Wi-Fi) : http://{local_ip}:{port}")
+        print(f"   • Accès direct Clara        : http://{local_ip}:{port}/?athlete=clara")
+        print(f"   • Accès direct Duo          : http://{local_ip}:{port}/?athlete=duo")
+    print()
     uvicorn.run("garmin_coach.web.app:app", host=host, port=port, reload=False)
 
 

@@ -16,6 +16,7 @@ def main():
     parser.add_argument("--auth-clara", action="store_true", help="Authentification interactive Garmin Connect pour Clara")
     parser.add_argument("--auth-louis", action="store_true", help="Authentification interactive Garmin Connect pour Louis")
     parser.add_argument("--web", action="store_true", help="Lance l'interface Web du Coach")
+    parser.add_argument("--host", type=str, default="0.0.0.0", help="Adresse d'écoute du serveur (défaut: 0.0.0.0 pour accès réseau local / Wi-Fi)")
     parser.add_argument("--port", type=int, default=5050, help="Port d'écoute pour l'interface Web (défaut: 5050)")
     args = parser.parse_args()
 
@@ -34,7 +35,7 @@ def main():
 
     if args.web:
         from garmin_coach.web.app import run_web
-        run_web(port=args.port)
+        run_web(host=args.host, port=args.port)
         return
 
     profile = AthleteProfile.load(args.athlete)

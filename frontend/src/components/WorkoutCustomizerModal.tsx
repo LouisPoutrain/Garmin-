@@ -153,7 +153,7 @@ export const WorkoutCustomizerModal: React.FC<WorkoutCustomizerModalProps> = ({
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50"
+                className="fixed inset-0 bg-bg/80 backdrop-blur-md z-50"
               />
             </Dialog.Overlay>
 
@@ -163,29 +163,29 @@ export const WorkoutCustomizerModal: React.FC<WorkoutCustomizerModalProps> = ({
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.96, y: 12 }}
                 transition={{ type: 'spring', stiffness: 350, damping: 25 }}
-                className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-lg max-h-[90vh] overflow-y-auto glass-panel p-6 rounded-3xl border border-white/10 shadow-2xl z-50 text-slate-100"
+                className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-lg max-h-[90vh] overflow-y-auto glass-panel p-6 rounded-card border border-border shadow-2xl z-50 text-ink"
               >
                 {/* Header */}
-                <div className="flex items-center justify-between pb-4 border-b border-white/5">
+                <div className="flex items-center justify-between pb-4 border-b border-border">
                   <div className="flex items-center gap-2.5">
-                    <div className="p-2 rounded-xl bg-gradient-to-br from-[#FF5E36]/20 to-[#E11D48]/20 border border-[#FF5E36]/30 text-[#FF5E36]">
+                    <div className="p-2 rounded-tile bg-gradient-to-br from-athlete-coral/20 to-athlete-coral/10 border border-athlete-coral/30 text-athlete-coral">
                       <Sliders className="w-5 h-5" />
                     </div>
                     <div>
-                      <Dialog.Title className="text-base font-bold text-white flex items-center gap-2">
+                      <Dialog.Title className="text-title font-heading font-bold text-ink flex items-center gap-2">
                         Personnaliser l'Entraînement
-                        <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-cyan-500/15 text-cyan-300 border border-cyan-500/30">
+                        <span className="text-micro font-mono px-2 py-0.5 rounded-pill bg-athlete-cyan/15 text-athlete-cyan border border-athlete-cyan/30">
                           {day.date_short || day.day}
                         </span>
                       </Dialog.Title>
-                      <p className="text-xs text-slate-400">
+                      <p className="text-xs text-ink-muted">
                         Ajustez les fractions avant d'injecter la séance sur votre montre Garmin
                       </p>
                     </div>
                   </div>
                   <Dialog.Close asChild>
                     <button
-                      className="p-1.5 rounded-xl bg-slate-900/60 hover:bg-slate-800 border border-white/5 text-slate-400 hover:text-white transition-colors"
+                      className="p-1.5 rounded-tile bg-surface-2 hover:bg-surface-3 border border-border text-ink-muted hover:text-ink transition-colors"
                       aria-label="Fermer"
                     >
                       <X className="w-4 h-4" />
@@ -195,14 +195,14 @@ export const WorkoutCustomizerModal: React.FC<WorkoutCustomizerModalProps> = ({
 
                 <form onSubmit={handleSubmit} className="mt-5 space-y-4">
                   {error && (
-                    <div className="p-3 rounded-xl bg-red-500/15 border border-red-500/30 text-red-300 text-xs">
+                    <div className="p-3 rounded-tile bg-athlete-coral/15 border border-athlete-coral/30 text-athlete-coral text-xs">
                       {error}
                     </div>
                   )}
 
                   {/* Workout Title */}
                   <div>
-                    <label className="block text-xs font-medium text-slate-300 mb-1.5">
+                    <label className="block text-xs font-medium text-ink mb-1.5">
                       Nom de la séance sur la montre
                     </label>
                     <input
@@ -210,28 +210,28 @@ export const WorkoutCustomizerModal: React.FC<WorkoutCustomizerModalProps> = ({
                       value={workoutName}
                       onChange={(e) => setWorkoutName(e.target.value)}
                       required
-                      className="w-full px-3.5 py-2 rounded-xl bg-slate-900/80 border border-white/10 text-xs text-white focus:outline-none focus:border-cyan-500/50"
+                      className="w-full px-3.5 py-2 rounded-tile bg-surface-2 border border-border text-xs text-ink focus:outline-none focus:border-athlete-cyan/50"
                     />
                   </div>
 
                   {/* Visual Timeline Breakdown */}
-                  <div className="p-3 rounded-2xl bg-slate-950/60 border border-white/5 space-y-2">
+                  <div className="p-3 rounded-card bg-surface-1 border border-border space-y-2">
                     <div className="flex items-center justify-between text-xs font-semibold">
-                      <span className="text-slate-300 flex items-center gap-1.5">
-                        <Flame className="w-3.5 h-3.5 text-[#FF5E36]" />
+                      <span className="text-ink flex items-center gap-1.5">
+                        <Flame className="w-3.5 h-3.5 text-athlete-coral" />
                         Structure Visuelle de la Séance
                       </span>
-                      <span className="text-cyan-300 font-mono">
+                      <span className="text-athlete-cyan font-mono">
                         Total : {totalDurationMinutes} min
                       </span>
                     </div>
 
                     {/* Timeline Bar */}
-                    <div className="h-6 rounded-lg bg-slate-900 border border-white/5 p-1 flex items-center gap-1 overflow-hidden">
+                    <div className="h-6 rounded-tile bg-surface-2 border border-border p-1 flex items-center gap-1 overflow-hidden">
                       {/* Warmup */}
                       <div
                         style={{ width: `${Math.max((warmupMin / totalDurationMinutes) * 100, 15)}%` }}
-                        className="h-full rounded bg-cyan-500/30 text-[9px] font-bold text-cyan-300 flex items-center justify-center truncate px-1"
+                        className="h-full rounded-pill bg-athlete-cyan/30 text-micro font-bold text-athlete-cyan flex items-center justify-center truncate px-1"
                         title={`Échauffement ${warmupMin} min`}
                       >
                         Échauff. {warmupMin}m
@@ -246,7 +246,7 @@ export const WorkoutCustomizerModal: React.FC<WorkoutCustomizerModalProps> = ({
                               30
                             )}%`,
                           }}
-                          className="h-full rounded bg-gradient-to-r from-[#FF5E36]/40 via-red-500/40 to-[#FF5E36]/40 text-[9px] font-bold text-slate-100 flex items-center justify-center truncate px-1"
+                          className="h-full rounded-pill bg-gradient-to-r from-athlete-coral/40 via-athlete-coral/40 to-athlete-coral/40 text-micro font-bold text-ink flex items-center justify-center truncate px-1"
                           title={`${repeats} répétitions de ${repSeconds}s`}
                         >
                           ⚡ {repeats} x ({repSeconds}s / {recoverySeconds}s)
@@ -254,7 +254,7 @@ export const WorkoutCustomizerModal: React.FC<WorkoutCustomizerModalProps> = ({
                       ) : (
                         <div
                           style={{ width: '60%' }}
-                          className="h-full rounded bg-emerald-500/30 text-[9px] font-bold text-emerald-300 flex items-center justify-center truncate px-1"
+                          className="h-full rounded-pill bg-metric-good/30 text-micro font-bold text-metric-good flex items-center justify-center truncate px-1"
                         >
                           Course Z2
                         </div>
@@ -263,7 +263,7 @@ export const WorkoutCustomizerModal: React.FC<WorkoutCustomizerModalProps> = ({
                       {/* Cooldown */}
                       <div
                         style={{ width: `${Math.max((cooldownMin / totalDurationMinutes) * 100, 15)}%` }}
-                        className="h-full rounded bg-cyan-500/30 text-[9px] font-bold text-cyan-300 flex items-center justify-center truncate px-1"
+                        className="h-full rounded-pill bg-athlete-cyan/30 text-micro font-bold text-athlete-cyan flex items-center justify-center truncate px-1"
                         title={`Retour au calme ${cooldownMin} min`}
                       >
                         Calme {cooldownMin}m
@@ -273,11 +273,11 @@ export const WorkoutCustomizerModal: React.FC<WorkoutCustomizerModalProps> = ({
 
                   {/* Interval specific parameters */}
                   {isIntervals && (
-                    <div className="p-3.5 rounded-2xl bg-slate-900/50 border border-white/5 space-y-3.5">
+                    <div className="p-3.5 rounded-card bg-surface-2/50 border border-border space-y-3.5">
                       <div className="grid grid-cols-2 gap-3">
                         {/* Repeats */}
                         <div>
-                          <label className="block text-[11px] font-medium text-slate-400 mb-1">
+                          <label className="block text-xs font-medium text-ink-muted mb-1">
                             Nombre de répétitions
                           </label>
                           <div className="flex items-center gap-1.5">
@@ -286,10 +286,10 @@ export const WorkoutCustomizerModal: React.FC<WorkoutCustomizerModalProps> = ({
                                 key={r}
                                 type="button"
                                 onClick={() => setRepeats(r)}
-                                className={`flex-1 py-1 text-xs font-bold rounded-lg border transition-all ${
+                                className={`flex-1 py-1 text-xs font-bold rounded-tile border transition-all ${
                                   repeats === r
-                                    ? 'bg-[#FF5E36]/20 border-[#FF5E36] text-white'
-                                    : 'bg-slate-950 border-white/5 text-slate-400 hover:text-white'
+                                    ? 'bg-athlete-coral/20 border-athlete-coral text-ink'
+                                    : 'bg-surface-1 border-border text-ink-muted hover:text-ink'
                                 }`}
                               >
                                 {r}
@@ -300,13 +300,13 @@ export const WorkoutCustomizerModal: React.FC<WorkoutCustomizerModalProps> = ({
 
                         {/* Fraction Duration */}
                         <div>
-                          <label className="block text-[11px] font-medium text-slate-400 mb-1">
+                          <label className="block text-xs font-medium text-ink-muted mb-1">
                             Durée d'une fraction
                           </label>
                           <select
                             value={repSeconds}
                             onChange={(e) => setRepSeconds(parseInt(e.target.value, 10))}
-                            className="w-full px-2.5 py-1.5 rounded-lg bg-slate-950 border border-white/10 text-xs text-white focus:outline-none"
+                            className="w-full px-2.5 py-1.5 rounded-tile bg-surface-1 border border-border text-xs text-ink focus:outline-none"
                           >
                             <option value={60}>1 min (VMA courte)</option>
                             <option value={90}>1 min 30 (VMA moyenne)</option>
@@ -318,53 +318,53 @@ export const WorkoutCustomizerModal: React.FC<WorkoutCustomizerModalProps> = ({
                       </div>
 
                       {/* Target Mode: Heart Rate vs Pace */}
-                      <div className="pt-2 border-t border-white/5">
-                        <label className="block text-[11px] font-medium text-slate-400 mb-1.5">
+                      <div className="pt-2 border-t border-border">
+                        <label className="block text-xs font-medium text-ink-muted mb-1.5">
                           Mode de guidage sur la montre
                         </label>
                         <div className="grid grid-cols-2 gap-2">
                           <button
                             type="button"
                             onClick={() => setTargetMode('hr')}
-                            className={`p-2 rounded-xl border text-left transition-all flex items-center gap-2 ${
+                            className={`p-2 rounded-tile border text-left transition-all flex items-center gap-2 ${
                               targetMode === 'hr'
-                                ? 'bg-cyan-500/15 border-cyan-500/40 text-cyan-200'
-                                : 'bg-slate-950 border-white/5 text-slate-400'
+                                ? 'bg-athlete-cyan/15 border-athlete-cyan/40 text-athlete-cyan'
+                                : 'bg-surface-1 border-border text-ink-muted'
                             }`}
                           >
-                            <Heart className="w-4 h-4 text-cyan-400" />
+                            <Heart className="w-4 h-4 text-athlete-cyan" />
                             <div>
                               <div className="text-xs font-bold">Zone Cardiaque</div>
-                              <div className="text-[10px] text-slate-400">165 - 178 bpm</div>
+                              <div className="text-micro text-ink-muted">{hrMin} - {hrMax} bpm</div>
                             </div>
                           </button>
 
                           <button
                             type="button"
                             onClick={() => setTargetMode('pace')}
-                            className={`p-2 rounded-xl border text-left transition-all flex items-center gap-2 ${
+                            className={`p-2 rounded-tile border text-left transition-all flex items-center gap-2 ${
                               targetMode === 'pace'
-                                ? 'bg-[#FF5E36]/15 border-[#FF5E36]/40 text-[#FF5E36]'
-                                : 'bg-slate-950 border-white/5 text-slate-400'
+                                ? 'bg-athlete-coral/15 border-athlete-coral/40 text-athlete-coral'
+                                : 'bg-surface-1 border-border text-ink-muted'
                             }`}
                           >
-                            <Zap className="w-4 h-4 text-[#FF5E36]" />
+                            <Zap className="w-4 h-4 text-athlete-coral" />
                             <div>
                               <div className="text-xs font-bold">Allure Seuil</div>
-                              <div className="text-[10px] text-slate-400">3:55 - 4:05 min/km</div>
+                              <div className="text-micro text-ink-muted">{paceTarget} min/km</div>
                             </div>
                           </button>
                         </div>
 
                         {targetMode === 'pace' && (
-                          <div className="mt-2.5 p-2.5 rounded-xl bg-slate-950/80 border border-[#FF5E36]/30 flex items-center justify-between">
-                            <span className="text-[11px] font-medium text-slate-300">
+                          <div className="mt-2.5 p-2.5 rounded-tile bg-surface-1 border border-athlete-coral/30 flex items-center justify-between">
+                            <span className="text-xs font-medium text-ink">
                               Allure cible sur la montre :
                             </span>
                             <select
                               value={paceTarget}
                               onChange={(e) => setPaceTarget(e.target.value)}
-                              className="px-2.5 py-1 rounded-lg bg-slate-900 border border-white/10 text-xs font-bold text-white focus:outline-none"
+                              className="px-2.5 py-1 rounded-tile bg-surface-2 border border-border text-xs font-bold text-ink focus:outline-none"
                             >
                               <option value="3:50">3:50 min/km (15.7 km/h)</option>
                               <option value="3:55">3:55 min/km (15.3 km/h)</option>
@@ -384,14 +384,14 @@ export const WorkoutCustomizerModal: React.FC<WorkoutCustomizerModalProps> = ({
                     <button
                       type="button"
                       onClick={onClose}
-                      className="px-4 py-2 rounded-xl bg-slate-900 border border-white/10 text-xs font-medium text-slate-300 hover:text-white transition-colors"
+                      className="btn-ghost px-4 py-2 rounded-tile text-xs font-medium"
                     >
                       Annuler
                     </button>
                     <button
                       type="submit"
                       disabled={submitting}
-                      className="px-4 py-2 rounded-xl bg-gradient-to-r from-[#FF5E36] to-[#E11D48] hover:from-[#FF5E36]/90 hover:to-[#E11D48]/90 text-xs font-bold text-white shadow-lg shadow-[#FF5E36]/20 transition-all flex items-center gap-2 active:scale-95 disabled:opacity-50"
+                      className="px-4 py-2 rounded-tile bg-gradient-to-r from-athlete-coral to-athlete-coral-dim hover:from-athlete-coral/90 hover:to-athlete-coral-dim/90 text-xs font-bold text-white shadow-lg shadow-athlete-coral/20 transition-all flex items-center gap-2 active:scale-95 disabled:opacity-50"
                     >
                       {submitting ? (
                         <Loader2 className="w-3.5 h-3.5 animate-spin" />

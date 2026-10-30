@@ -20,6 +20,11 @@ import {
 } from 'recharts';
 import type { Biometrics } from '../types';
 
+// Raw hex consts for Recharts / SVG chart code (CSS vars are unreliable there)
+const CYAN = "#2563EB";
+const CORAL = "#C2417A";
+const NEUTRAL = "#64748B";
+
 interface GarminDuoStatsProps {
   biometrics: Biometrics | null;
   loading: boolean;
@@ -121,7 +126,7 @@ export const GarminDuoStats: React.FC<GarminDuoStatsProps> = ({
     const strokeDashoffset = circumference - (percent / 100) * circumference;
 
     return (
-      <div className="flex flex-col items-center justify-center p-2 rounded-xl bg-[#0F141F] border border-white/[0.04]">
+      <div className="flex flex-col items-center justify-center p-2 rounded-tile bg-surface-2 border border-border">
         <div className="relative w-16 h-16 flex items-center justify-center">
           <svg height={radius * 2} width={radius * 2} className="rotate-[-90deg]">
             <circle
@@ -145,13 +150,13 @@ export const GarminDuoStats: React.FC<GarminDuoStatsProps> = ({
             />
           </svg>
           <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-            <span className="font-mono text-xs font-bold text-white tracking-tight leading-none">
+            <span className="font-mono text-xs font-bold text-ink tracking-tight leading-none">
               {displayVal !== null ? displayVal : '--'}
             </span>
-            <span className="text-[9px] font-mono text-slate-400 leading-none mt-0.5">{unit}</span>
+            <span className="text-micro font-mono text-ink-muted leading-none mt-0.5">{unit}</span>
           </div>
         </div>
-        <span className="text-[10px] font-medium text-slate-300 mt-1 uppercase tracking-wider">
+        <span className="text-micro font-medium text-ink mt-1 uppercase tracking-wider">
           {label}
         </span>
       </div>
@@ -178,13 +183,13 @@ export const GarminDuoStats: React.FC<GarminDuoStatsProps> = ({
 
     return (
       <div
-        className={`p-3.5 rounded-xl bg-[#121722] border ${accent.borderClass} space-y-3 relative overflow-hidden`}
+        className={`p-3.5 rounded-tile bg-surface-2 border ${accent.borderClass} space-y-3 relative overflow-hidden`}
       >
         {/* Top Header */}
-        <div className="flex items-center justify-between pb-2 border-b border-white/[0.06]">
+        <div className="flex items-center justify-between pb-2 border-b border-border">
           <div className="flex items-center gap-2">
             <div
-              className="w-2.5 h-2.5 rounded-full"
+              className="w-2.5 h-2.5 rounded-pill"
               style={{ backgroundColor: accent.color }}
             />
             <div>
@@ -192,13 +197,13 @@ export const GarminDuoStats: React.FC<GarminDuoStatsProps> = ({
                 <span className={`text-xs font-bold uppercase tracking-wider ${accent.textClass}`}>
                   {name}
                 </span>
-                <span className="text-[9px] font-mono text-slate-500 uppercase">{role}</span>
+                <span className="text-micro font-mono text-ink-faint uppercase">{role}</span>
               </div>
             </div>
           </div>
 
           <span
-            className={`text-[10px] font-mono font-semibold px-2 py-0.5 rounded-md border ${accent.badgeClass}`}
+            className={`text-micro font-mono font-semibold px-2 py-0.5 rounded-tile border ${accent.badgeClass}`}
           >
             {readiness !== null && readiness !== undefined
               ? `Readiness ${readiness}`
@@ -227,44 +232,44 @@ export const GarminDuoStats: React.FC<GarminDuoStatsProps> = ({
         {/* 3 Telemetry Metrics Chips */}
         <div className="grid grid-cols-3 gap-1.5 text-center">
           {/* Sommeil */}
-          <div className="p-2 rounded-lg bg-[#0F141F] border border-white/[0.04]">
-            <div className="text-[9px] uppercase font-mono text-slate-400 flex items-center justify-center gap-1 mb-0.5">
-              <Moon className="w-2.5 h-2.5 text-slate-400" />
+          <div className="p-2 rounded-tile bg-surface-2 border border-border">
+            <div className="text-micro uppercase font-mono text-ink-muted flex items-center justify-center gap-1 mb-0.5">
+              <Moon className="w-2.5 h-2.5 text-ink-muted" />
               Sommeil
             </div>
-            <div className="font-mono text-xs font-bold text-slate-200">
+            <div className="font-mono text-xs font-bold text-ink">
               {sleep !== null && sleep !== undefined ? `${sleep}h` : '--'}
             </div>
           </div>
 
           {/* FC Repos */}
-          <div className="p-2 rounded-lg bg-[#0F141F] border border-white/[0.04]">
-            <div className="text-[9px] uppercase font-mono text-slate-400 flex items-center justify-center gap-1 mb-0.5">
-              <Heart className="w-2.5 h-2.5 text-rose-400" />
+          <div className="p-2 rounded-tile bg-surface-2 border border-border">
+            <div className="text-micro uppercase font-mono text-ink-muted flex items-center justify-center gap-1 mb-0.5">
+              <Heart className="w-2.5 h-2.5 text-athlete-coral" />
               FC Repos
             </div>
-            <div className="font-mono text-xs font-bold text-slate-200">
+            <div className="font-mono text-xs font-bold text-ink">
               {rhr !== null && rhr !== undefined ? `${rhr}` : '--'}{' '}
-              <span className="text-[9px] text-slate-400 font-normal">bpm</span>
+              <span className="text-micro text-ink-muted font-normal">bpm</span>
             </div>
           </div>
 
           {/* Stress */}
-          <div className="p-2 rounded-lg bg-[#0F141F] border border-white/[0.04]">
-            <div className="text-[9px] uppercase font-mono text-slate-400 flex items-center justify-center gap-1 mb-0.5">
-              <Smile className="w-2.5 h-2.5 text-amber-400" />
+          <div className="p-2 rounded-tile bg-surface-2 border border-border">
+            <div className="text-micro uppercase font-mono text-ink-muted flex items-center justify-center gap-1 mb-0.5">
+              <Smile className="w-2.5 h-2.5 text-duo" />
               Stress
             </div>
-            <div className="font-mono text-xs font-bold text-slate-200">
+            <div className="font-mono text-xs font-bold text-ink">
               {stress !== null && stress !== undefined ? `${stress}` : '--'}
-              <span className="text-[9px] text-slate-400 font-normal">/100</span>
+              <span className="text-micro text-ink-muted font-normal">/100</span>
             </div>
           </div>
         </div>
 
         {/* Sync Summary message */}
         {data?.summary_message && (
-          <p className="text-[10.5px] text-slate-400 leading-snug line-clamp-2 italic pt-1 border-t border-white/[0.04]">
+          <p className="text-micro text-ink-muted leading-snug line-clamp-2 italic pt-1 border-t border-border">
             "{data.summary_message}"
           </p>
         )}
@@ -273,21 +278,21 @@ export const GarminDuoStats: React.FC<GarminDuoStatsProps> = ({
   };
 
   return (
-    <div className="telemetry-card rounded-2xl p-4 sm:p-5 space-y-4 text-slate-200">
+    <div className="telemetry-card rounded-card p-4 sm:p-5 space-y-4 text-ink">
       {/* 1. Header with Mode Toggle & Refresh */}
-      <div className="flex items-center justify-between pb-3 border-b border-white/[0.07]">
+      <div className="flex items-center justify-between pb-3 border-b border-border-strong">
         <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-lg bg-[#171D2A] border border-white/[0.08] flex items-center justify-center text-[#00A7E1]">
-            <Radio className="w-4 h-4 animate-pulse text-[#00A7E1]" />
+          <div className="w-8 h-8 rounded-tile bg-surface-3 border border-border-strong flex items-center justify-center text-athlete-cyan">
+            <Radio className="w-4 h-4 animate-pulse text-athlete-cyan" />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h3 className="text-xs font-bold uppercase tracking-wider text-white">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-ink">
                 Télémétrie Duo & Récupération
               </h3>
-              <span className="w-1.5 h-1.5 rounded-full bg-[#10B981] animate-ping" />
+              <span className="w-1.5 h-1.5 rounded-pill bg-metric-good animate-ping" />
             </div>
-            <p className="text-[11px] text-slate-400 font-mono">
+            <p className="text-xs text-ink-muted font-mono">
               Confrontation physiologique Garmin Connect
             </p>
           </div>
@@ -295,29 +300,29 @@ export const GarminDuoStats: React.FC<GarminDuoStatsProps> = ({
 
         <div className="flex items-center gap-2">
           {/* View Switcher: Radar vs Miroir */}
-          <div className="flex items-center p-0.5 rounded-lg bg-[#0F141F] border border-white/[0.06] text-xs">
+          <div className="flex items-center p-0.5 rounded-tile bg-surface-2 border border-border text-xs">
             <button
               type="button"
               onClick={() => setViewMode('radar')}
-              className={`flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-semibold transition-all ${
+              className={`flex items-center gap-1 px-2 py-1 rounded-tile text-micro font-semibold transition-all ${
                 viewMode === 'radar'
-                  ? 'bg-[#1C2538] text-white shadow-sm border border-white/[0.08]'
-                  : 'text-slate-400 hover:text-white'
+                  ? 'bg-surface-3 text-ink shadow-sm border border-border-strong'
+                  : 'text-ink-muted hover:text-ink'
               }`}
             >
-              <Gauge className="w-3 h-3 text-[#00A7E1]" />
+              <Gauge className="w-3 h-3 text-athlete-cyan" />
               <span className="hidden sm:inline">Radar</span>
             </button>
             <button
               type="button"
               onClick={() => setViewMode('mirror')}
-              className={`flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-semibold transition-all ${
+              className={`flex items-center gap-1 px-2 py-1 rounded-tile text-micro font-semibold transition-all ${
                 viewMode === 'mirror'
-                  ? 'bg-[#1C2538] text-white shadow-sm border border-white/[0.08]'
-                  : 'text-slate-400 hover:text-white'
+                  ? 'bg-surface-3 text-ink shadow-sm border border-border-strong'
+                  : 'text-ink-muted hover:text-ink'
               }`}
             >
-              <SlidersHorizontal className="w-3 h-3 text-[#F43F5E]" />
+              <SlidersHorizontal className="w-3 h-3 text-athlete-coral" />
               <span className="hidden sm:inline">Miroir</span>
             </button>
           </div>
@@ -327,10 +332,10 @@ export const GarminDuoStats: React.FC<GarminDuoStatsProps> = ({
               type="button"
               onClick={onRefresh}
               disabled={loading}
-              className="p-1.5 rounded-lg bg-[#171D2A] hover:bg-[#20293C] text-slate-400 hover:text-white transition-colors border border-white/[0.06]"
+              className="p-1.5 rounded-tile bg-surface-2 hover:bg-surface-3 text-ink-muted hover:text-ink transition-colors border border-border"
               title="Rafraîchir la télémétrie Garmin"
             >
-              <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin text-[#00A7E1]' : ''}`} />
+              <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin text-athlete-cyan' : ''}`} />
             </button>
           )}
         </div>
@@ -342,30 +347,30 @@ export const GarminDuoStats: React.FC<GarminDuoStatsProps> = ({
           {/* Legend row */}
           <div className="flex items-center justify-between text-xs px-2 pt-1">
             <div className="flex items-center gap-2">
-              <span className="w-3 h-3 rounded-full bg-[#00A7E1]/20 border border-[#00A7E1]" />
-              <span className="text-xs font-bold text-white">Louis</span>
-              <span className="font-mono text-[10px] text-slate-400">
+              <span className="w-3 h-3 rounded-pill bg-athlete-cyan/20 border border-athlete-cyan" />
+              <span className="text-xs font-bold text-ink">Louis</span>
+              <span className="font-mono text-micro text-ink-muted">
                 (Readiness: {louis?.readiness_score ?? '--'})
               </span>
             </div>
 
             <div className="flex items-center gap-2">
-              <span className="w-3 h-3 rounded-full bg-[#F43F5E]/20 border border-[#F43F5E]" />
-              <span className="text-xs font-bold text-white">Clara</span>
-              <span className="font-mono text-[10px] text-slate-400">
+              <span className="w-3 h-3 rounded-pill bg-athlete-coral/20 border border-athlete-coral" />
+              <span className="text-xs font-bold text-ink">Clara</span>
+              <span className="font-mono text-micro text-ink-muted">
                 (Readiness: {clara?.readiness_score ?? '--'})
               </span>
             </div>
           </div>
 
           {/* Recharts Radar */}
-          <div className="h-64 w-full bg-[#0E131D] rounded-xl border border-white/[0.04] p-1 flex items-center justify-center">
+          <div className="h-64 w-full bg-surface-2 rounded-tile border border-border p-1 flex items-center justify-center">
             <ResponsiveContainer width="100%" height="100%">
               <RadarChart data={radarData} outerRadius="70%">
                 <PolarGrid stroke="rgba(255, 255, 255, 0.08)" strokeDasharray="3 3" />
                 <PolarAngleAxis
                   dataKey="metric"
-                  tick={{ fill: '#94A3B8', fontSize: 11, fontFamily: 'var(--font-mono)' }}
+                  tick={{ fill: NEUTRAL, fontSize: 11, fontFamily: 'var(--font-mono)' }}
                 />
                 <PolarRadiusAxis
                   angle={30}
@@ -378,13 +383,13 @@ export const GarminDuoStats: React.FC<GarminDuoStatsProps> = ({
                     if (active && payload && payload.length) {
                       const data = payload[0].payload;
                       return (
-                        <div className="p-2.5 rounded-lg bg-[#0F141F] border border-white/10 shadow-xl text-xs space-y-1">
-                          <div className="font-bold text-white">{data.metric}</div>
-                          <div className="flex items-center justify-between gap-4 font-mono text-[#00A7E1]">
+                        <div className="p-2.5 rounded-tile bg-surface-2 border border-border-strong shadow-xl text-xs space-y-1">
+                          <div className="font-bold text-ink">{data.metric}</div>
+                          <div className="flex items-center justify-between gap-4 font-mono text-athlete-cyan">
                             <span>Louis :</span>
                             <span className="font-bold">{data.louis} / 100</span>
                           </div>
-                          <div className="flex items-center justify-between gap-4 font-mono text-[#F43F5E]">
+                          <div className="flex items-center justify-between gap-4 font-mono text-athlete-coral">
                             <span>Clara :</span>
                             <span className="font-bold">{data.clara} / 100</span>
                           </div>
@@ -397,16 +402,16 @@ export const GarminDuoStats: React.FC<GarminDuoStatsProps> = ({
                 <Radar
                   name="Louis"
                   dataKey="louis"
-                  stroke="#00A7E1"
-                  fill="#00A7E1"
+                  stroke={CYAN}
+                  fill={CYAN}
                   fillOpacity={0.25}
                   strokeWidth={2}
                 />
                 <Radar
                   name="Clara"
                   dataKey="clara"
-                  stroke="#F43F5E"
-                  fill="#F43F5E"
+                  stroke={CORAL}
+                  fill={CORAL}
                   fillOpacity={0.25}
                   strokeWidth={2}
                 />
@@ -415,10 +420,10 @@ export const GarminDuoStats: React.FC<GarminDuoStatsProps> = ({
           </div>
 
           {/* Quick Dual Physiological Insight */}
-          <div className="p-2.5 rounded-xl bg-[#0F141F] border border-white/[0.04] flex items-center gap-2.5 text-xs text-slate-300">
-            <TrendingUp className="w-4 h-4 text-[#10B981] flex-shrink-0" />
-            <div className="text-[11px] leading-tight">
-              <strong className="text-white">Équilibre Duo :</strong> Récupération coordonnée
+          <div className="p-2.5 rounded-tile bg-surface-2 border border-border flex items-center gap-2.5 text-xs text-ink">
+            <TrendingUp className="w-4 h-4 text-metric-good flex-shrink-0" />
+            <div className="text-xs leading-tight">
+              <strong className="text-ink">Équilibre Duo :</strong> Récupération coordonnée
               propice aux séances d'intensité partagée cette semaine.
             </div>
           </div>
@@ -429,19 +434,19 @@ export const GarminDuoStats: React.FC<GarminDuoStatsProps> = ({
       {viewMode === 'mirror' && (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {renderAthleteMirrorCard(louis, 'Louis Poutrain', 'Athlète 1', {
-            color: '#00A7E1',
-            glowClass: 'glow-cyan',
-            borderClass: 'border-[#00A7E1]/30',
-            textClass: 'text-[#00A7E1]',
-            badgeClass: 'bg-[#00A7E1]/10 text-[#00A7E1] border-[#00A7E1]/30',
+            color: CYAN,
+            glowClass: 'shadow-[0_0_12px_-2px_rgba(37,99,235,0.30)]',
+            borderClass: 'border-athlete-cyan/30',
+            textClass: 'text-athlete-cyan',
+            badgeClass: 'bg-athlete-cyan/10 text-athlete-cyan border-athlete-cyan/30',
           })}
 
           {renderAthleteMirrorCard(clara, 'Clara', 'Athlète 2', {
-            color: '#F43F5E',
-            glowClass: 'glow-coral',
-            borderClass: 'border-[#F43F5E]/30',
-            textClass: 'text-[#F43F5E]',
-            badgeClass: 'bg-[#F43F5E]/10 text-[#F43F5E] border-[#F43F5E]/30',
+            color: CORAL,
+            glowClass: 'shadow-[0_0_12px_-2px_rgba(194,65,122,0.30)]',
+            borderClass: 'border-athlete-coral/30',
+            textClass: 'text-athlete-coral',
+            badgeClass: 'bg-athlete-coral/10 text-athlete-coral border-athlete-coral/30',
           })}
         </div>
       )}

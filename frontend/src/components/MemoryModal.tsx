@@ -57,14 +57,14 @@ export const MemoryModal: React.FC<MemoryModalProps> = ({
       key: 'injuries_and_sensitivities' as const,
       label: 'Santé & Alertes Blessures',
       icon: AlertTriangle,
-      color: 'text-[#F43F5E]',
-      bgColor: 'bg-[#F43F5E]/10',
-      borderColor: 'border-[#F43F5E]/30',
+      color: 'text-athlete-coral',
+      bgColor: 'bg-athlete-coral/10',
+      borderColor: 'border-athlete-coral/30',
       emptyText: 'Aucune blessure active signalée.',
       action: (memory?.facts?.injuries_and_sensitivities?.length ?? 0) > 0 ? (
         <button
           onClick={onClearInjuries}
-          className="text-[10px] font-mono font-bold text-[#00A7E1] hover:text-white bg-[#00A7E1]/15 hover:bg-[#00A7E1]/30 px-2 py-0.5 rounded-md border border-[#00A7E1]/30 transition-colors"
+          className="text-micro font-mono font-bold text-athlete-cyan hover:text-ink bg-athlete-cyan/15 hover:bg-athlete-cyan/30 px-2 py-0.5 rounded-tile border border-athlete-cyan/30 transition-colors"
         >
           Tout marquer guéri
         </button>
@@ -74,30 +74,37 @@ export const MemoryModal: React.FC<MemoryModalProps> = ({
       key: 'preferences' as const,
       label: 'Préférences & Style',
       icon: Compass,
-      color: 'text-[#00A7E1]',
-      bgColor: 'bg-[#00A7E1]/10',
-      borderColor: 'border-[#00A7E1]/30',
+      color: 'text-athlete-cyan',
+      bgColor: 'bg-athlete-cyan/10',
+      borderColor: 'border-athlete-cyan/30',
       emptyText: 'Aucune préférence enregistrée.',
     },
     {
       key: 'active_goals' as const,
       label: 'Objectifs Actifs',
       icon: Target,
-      color: 'text-[#F59E0B]',
-      bgColor: 'bg-[#F59E0B]/10',
-      borderColor: 'border-[#F59E0B]/30',
+      color: 'text-duo',
+      bgColor: 'bg-duo/10',
+      borderColor: 'border-duo/30',
       emptyText: 'Aucun objectif secondaire.',
     },
     {
       key: 'schedule_constraints' as const,
       label: "Contraintes d'Agenda",
       icon: Calendar,
-      color: 'text-[#A855F7]',
-      bgColor: 'bg-[#A855F7]/10',
-      borderColor: 'border-[#A855F7]/30',
+      color: 'text-duo',
+      bgColor: 'bg-duo/10',
+      borderColor: 'border-duo/30',
       emptyText: "Aucune contrainte d'agenda signalée.",
     },
   ];
+
+  // Record de plus longue sortie : "29.95 km — Panzhoult (06/07/2025)"
+  const longestRun = history?.running_profile?.longest_run ?? '';
+  const longestRunValue = longestRun.split(' ')[0] || '';
+  const longestRunSub = longestRun.includes('—')
+    ? longestRun.split('—').slice(1).join('—').trim()
+    : longestRun;
 
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
@@ -110,7 +117,7 @@ export const MemoryModal: React.FC<MemoryModalProps> = ({
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="fixed inset-0 z-50 bg-[#070A10]/85 backdrop-blur-md"
+                className="fixed inset-0 z-50 bg-bg/85 backdrop-blur-md"
               />
             </Dialog.Overlay>
 
@@ -121,20 +128,20 @@ export const MemoryModal: React.FC<MemoryModalProps> = ({
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.95, y: 15 }}
                 transition={{ type: 'spring', stiffness: 350, damping: 25 }}
-                className="fixed inset-0 z-50 m-auto max-w-3xl max-h-[90vh] overflow-y-auto bg-[#0E131D] p-6 rounded-3xl border border-white/[0.08] shadow-2xl flex flex-col focus:outline-none text-slate-200"
+                className="fixed inset-0 z-50 m-auto max-w-3xl max-h-[90vh] overflow-y-auto bg-surface-1 p-6 rounded-card border border-border shadow-2xl flex flex-col focus:outline-none text-ink"
               >
                 {/* Header */}
-                <div className="flex items-start justify-between pb-4 border-b border-white/[0.08] mb-5">
+                <div className="flex items-start justify-between pb-4 border-b border-border mb-5">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-2xl bg-[#00A7E1]/15 border border-[#00A7E1]/30 flex items-center justify-center text-[#00A7E1] shadow-[0_0_15px_rgba(0,167,225,0.2)]">
-                      <Brain className="w-5 h-5 text-[#00A7E1]" />
+                    <div className="w-10 h-10 rounded-tile bg-athlete-cyan/15 border border-athlete-cyan/30 flex items-center justify-center text-athlete-cyan shadow-[0_0_12px_-2px_rgba(37,99,235,0.30)]">
+                      <Brain className="w-5 h-5 text-athlete-cyan" />
                     </div>
                     <div>
-                      <Dialog.Title className="text-base font-bold text-white tracking-tight">
+                      <Dialog.Title className="text-base font-bold text-ink tracking-tight">
                         Mémoire & Télémétrie Historique de l'Athlète
                       </Dialog.Title>
-                      <Dialog.Description className="text-xs font-mono text-slate-400">
-                        Analyse sur 100 activités réelles Garmin Connect et apprentissage adaptatif
+                      <Dialog.Description className="text-xs font-mono text-ink-muted">
+                        Analyse sur {history?.total_activities_analyzed ?? '—'} activités réelles Garmin Connect et apprentissage adaptatif
                       </Dialog.Description>
                     </div>
                   </div>
@@ -144,7 +151,7 @@ export const MemoryModal: React.FC<MemoryModalProps> = ({
                       <button
                         type="button"
                         onClick={onResetMemory}
-                        className="px-2.5 py-1.5 rounded-xl text-[11px] font-mono text-slate-400 hover:text-[#F43F5E] hover:bg-[#F43F5E]/10 border border-white/[0.08] hover:border-[#F43F5E]/30 transition-all flex items-center gap-1.5"
+                        className="px-2.5 py-1.5 rounded-tile text-label font-mono text-ink-muted hover:text-athlete-coral hover:bg-athlete-coral/10 border border-border hover:border-athlete-coral/30 transition-all flex items-center gap-1.5"
                         title="Réinitialiser la mémoire du coach à un état 100% neutre"
                       >
                         <RotateCcw className="w-3.5 h-3.5" />
@@ -153,7 +160,7 @@ export const MemoryModal: React.FC<MemoryModalProps> = ({
                     )}
                     <Dialog.Close asChild>
                       <button
-                        className="p-1.5 rounded-xl text-slate-400 hover:text-white hover:bg-[#171D2A] transition-colors focus-visible:outline-none"
+                        className="p-1.5 rounded-tile text-ink-muted hover:text-ink hover:bg-surface-3 transition-colors focus-visible:outline-none"
                         aria-label="Fermer"
                       >
                         <X className="w-5 h-5" />
@@ -164,65 +171,73 @@ export const MemoryModal: React.FC<MemoryModalProps> = ({
 
                 {/* Section 1: Lifetime Garmin Analytics Banner */}
                 <div className="mb-6">
-                  <h4 className="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-400 mb-2 flex items-center gap-1.5">
-                    <Award className="w-3.5 h-3.5 text-[#00A7E1]" />
+                  <h4 className="text-micro font-mono font-bold uppercase tracking-wider text-ink-muted mb-2 flex items-center gap-1.5">
+                    <Award className="w-3.5 h-3.5 text-athlete-cyan" />
                     Télémétrie Historique Cumulée
                   </h4>
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 font-mono">
-                    <div className="p-3 rounded-xl bg-[#121722] border border-white/[0.05]">
-                      <span className="text-[10px] uppercase font-bold text-slate-400">
-                        Volume Total
-                      </span>
-                      <div className="text-base font-bold text-white mt-0.5">
-                        {history?.lifetime_volume_km || 802.7} km
+                  {history ? (
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 font-mono">
+                      <div className="p-3 rounded-tile bg-surface-2 border border-border">
+                        <span className="text-micro uppercase font-bold text-ink-muted">
+                          Volume Total
+                        </span>
+                        <div className="text-hero font-bold text-ink mt-0.5">
+                          {history.lifetime_volume_km} km
+                        </div>
+                        <span className="text-micro text-ink-muted">
+                          {history.total_activities_analyzed} séances
+                        </span>
                       </div>
-                      <span className="text-[10px] text-slate-400">
-                        {history?.total_activities_analyzed || 100} séances
-                      </span>
-                    </div>
 
-                    <div className="p-3 rounded-xl bg-[#121722] border border-white/[0.05]">
-                      <span className="text-[10px] uppercase font-bold text-[#00A7E1]">
-                        Course à Pied
-                      </span>
-                      <div className="text-base font-bold text-[#00A7E1] mt-0.5">
-                        {history?.running_profile?.total_km || 504.7} km
+                      <div className="p-3 rounded-tile bg-surface-2 border border-border">
+                        <span className="text-micro uppercase font-bold text-athlete-cyan">
+                          Course à Pied
+                        </span>
+                        <div className="text-hero font-bold text-athlete-cyan mt-0.5">
+                          {history.running_profile.total_km} km
+                        </div>
+                        <span className="text-micro text-ink-muted">
+                          {history.running_profile.sessions} sorties • {history.running_profile.average_pace}
+                        </span>
                       </div>
-                      <span className="text-[10px] text-slate-400">
-                        {history?.running_profile?.sessions || 71} sorties • {history?.running_profile?.average_pace || '5:46'}
-                      </span>
-                    </div>
 
-                    <div className="p-3 rounded-xl bg-[#121722] border border-white/[0.05]">
-                      <span className="text-[10px] uppercase font-bold text-[#A855F7]">
-                        Record Sortie
-                      </span>
-                      <div className="text-base font-bold text-[#A855F7] mt-0.5 truncate">
-                        29.95 km
+                      <div className="p-3 rounded-tile bg-surface-2 border border-border">
+                        <span className="text-micro uppercase font-bold text-athlete-cyan">
+                          Record Sortie
+                        </span>
+                        <div className="text-hero font-bold text-athlete-cyan mt-0.5 truncate">
+                          {longestRunValue} km
+                        </div>
+                        <span className="text-micro text-ink-muted truncate block">
+                          {longestRunSub}
+                        </span>
                       </div>
-                      <span className="text-[10px] text-slate-400 truncate block">
-                        {history?.running_profile?.longest_run || 'Panzoult (06/07/2025)'}
-                      </span>
-                    </div>
 
-                    <div className="p-3 rounded-xl bg-[#121722] border border-white/[0.05]">
-                      <span className="text-[10px] uppercase font-bold text-[#F59E0B]">
-                        Cyclisme Foncier
-                      </span>
-                      <div className="text-base font-bold text-[#F59E0B] mt-0.5">
-                        {history?.cycling_profile?.total_km || 184.2} km
+                      <div className="p-3 rounded-tile bg-surface-2 border border-border">
+                        <span className="text-micro uppercase font-bold text-duo">
+                          Cyclisme Foncier
+                        </span>
+                        <div className="text-hero font-bold text-duo mt-0.5">
+                          {history.cycling_profile.total_km} km
+                        </div>
+                        <span className="text-micro text-ink-muted">
+                          {history.cycling_profile.sessions} sorties • Max {history.cycling_profile.max_distance_km} km
+                        </span>
                       </div>
-                      <span className="text-[10px] text-slate-400">
-                        {history?.cycling_profile?.sessions || 8} sorties • Max 60.5 km
+                    </div>
+                  ) : (
+                    <div className="p-3.5 rounded-tile bg-surface-2 border border-border font-mono">
+                      <span className="text-label text-ink-muted">
+                        {memory ? "Aucune donnée d'historique" : "Chargement de l'historique…"}
                       </span>
                     </div>
-                  </div>
+                  )}
                 </div>
 
                 {/* Section 2: Memory Categories Grid */}
                 <div className="mb-6 space-y-3.5">
-                  <h4 className="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
-                    <Brain className="w-3.5 h-3.5 text-[#00A7E1]" />
+                  <h4 className="text-micro font-mono font-bold uppercase tracking-wider text-ink-muted flex items-center gap-1.5">
+                    <Brain className="w-3.5 h-3.5 text-athlete-cyan" />
                     Consignes & Contexte IA Mémorisés
                   </h4>
 
@@ -234,16 +249,16 @@ export const MemoryModal: React.FC<MemoryModalProps> = ({
                       return (
                         <div
                           key={cat.key}
-                          className="p-3.5 rounded-2xl bg-[#121722] border border-white/[0.06] space-y-2.5 flex flex-col justify-between"
+                          className="p-3.5 rounded-card bg-surface-2 border border-border space-y-2.5 flex flex-col justify-between"
                         >
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2">
                               <div
-                                className={`w-6 h-6 rounded-lg ${cat.bgColor} ${cat.borderColor} border flex items-center justify-center ${cat.color}`}
+                                className={`w-6 h-6 rounded-tile ${cat.bgColor} ${cat.borderColor} border flex items-center justify-center ${cat.color}`}
                               >
                                 <Icon className="w-3.5 h-3.5" />
                               </div>
-                              <span className="text-xs font-bold text-white">
+                              <span className="text-xs font-bold text-ink">
                                 {cat.label}
                               </span>
                             </div>
@@ -252,7 +267,7 @@ export const MemoryModal: React.FC<MemoryModalProps> = ({
 
                           <div className="space-y-1.5 min-h-[50px]">
                             {items.length === 0 ? (
-                              <p className="text-[11px] text-slate-500 italic py-2">
+                              <p className="text-label text-ink-faint italic py-2">
                                 {cat.emptyText}
                               </p>
                             ) : (
@@ -261,13 +276,13 @@ export const MemoryModal: React.FC<MemoryModalProps> = ({
                                   key={idx}
                                   initial={{ opacity: 0, x: -4 }}
                                   animate={{ opacity: 1, x: 0 }}
-                                  className="flex items-center justify-between gap-2 p-1.5 px-2.5 rounded-lg bg-[#0F141F] border border-white/[0.04] text-xs text-slate-200 group"
+                                  className="flex items-center justify-between gap-2 p-1.5 px-2.5 rounded-tile bg-surface-2 border border-border text-xs text-ink group"
                                 >
-                                  <span className="truncate flex-1 font-mono text-[11px]">{item}</span>
+                                  <span className="truncate flex-1 font-mono text-label">{item}</span>
                                   <button
                                     onClick={() => onRemoveFact(cat.key, item)}
-                                    className="text-slate-500 hover:text-[#F43F5E] p-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity"
-                                    title="Oublier ce fait"
+                                    className="text-ink-faint hover:text-athlete-coral p-0.5 rounded opacity-0 group-hover:opacity-100 focus-visible:opacity-100 group-focus-within:opacity-100 transition-opacity"
+                                    aria-label={`Oublier ce fait : ${item}`}
                                   >
                                     <Trash2 className="w-3 h-3" />
                                   </button>
@@ -282,15 +297,15 @@ export const MemoryModal: React.FC<MemoryModalProps> = ({
                 </div>
 
                 {/* Section 3: Add Fact Form */}
-                <div className="p-3.5 rounded-2xl bg-[#121722] border border-white/[0.06] mt-auto">
-                  <h4 className="text-xs font-bold text-white mb-2">
+                <div className="p-3.5 rounded-card bg-surface-2 border border-border mt-auto">
+                  <h4 className="text-xs font-bold text-ink mb-2">
                     Ajouter une consigne manuellement
                   </h4>
                   <form onSubmit={handleAdd} className="flex flex-col sm:flex-row gap-2 font-mono">
                     <select
                       value={newCategory}
                       onChange={(e) => setNewCategory(e.target.value)}
-                      className="text-xs rounded-xl bg-[#0F141F] border border-white/[0.08] px-3 py-2 text-slate-200 focus:outline-none focus:border-[#00A7E1]/50"
+                      className="text-xs rounded-tile bg-surface-2 border border-border px-3 py-2 text-ink focus:outline-none focus:border-athlete-cyan/50"
                     >
                       <option value="preferences">Préférence</option>
                       <option value="injuries_and_sensitivities">Alerte Santé / Douleur</option>
@@ -303,13 +318,13 @@ export const MemoryModal: React.FC<MemoryModalProps> = ({
                       value={newFactText}
                       onChange={(e) => setNewFactText(e.target.value)}
                       placeholder="Ex: Je préfère courir le matin à jeun..."
-                      className="flex-1 text-xs rounded-xl bg-[#0F141F] border border-white/[0.08] px-3 py-2 text-white placeholder-slate-500 focus:outline-none focus:border-[#00A7E1]/50"
+                      className="flex-1 text-xs rounded-tile bg-surface-2 border border-border px-3 py-2 text-ink placeholder:text-ink-faint focus:outline-none focus:border-athlete-cyan/50"
                     />
 
                     <button
                       type="submit"
                       disabled={!newFactText.trim() || isSubmitting}
-                      className="px-4 py-2 rounded-xl text-xs font-semibold btn-telemetry-cyan disabled:opacity-50 flex items-center justify-center gap-1.5 transition-all"
+                      className="px-4 py-2 rounded-tile text-xs font-semibold btn-primary disabled:opacity-50 flex items-center justify-center gap-1.5 transition-all"
                     >
                       <Plus className="w-3.5 h-3.5 stroke-[2.2]" />
                       <span>Enregistrer</span>

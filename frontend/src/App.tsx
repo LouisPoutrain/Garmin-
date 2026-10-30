@@ -27,10 +27,37 @@ import { MemoryModal } from './components/MemoryModal';
 import { ActivityDetailModal } from './components/ActivityDetailModal';
 import { WorkoutCustomizerModal } from './components/WorkoutCustomizerModal';
 import { ManualSessionModal } from './components/ManualSessionModal';
+import { StartPrepModal } from './components/StartPrepModal';
+import { Sun, CalendarRange, Gauge, MessageSquare } from 'lucide-react';
+import { cn } from './lib/utils';
+
+const TABS = [
+  { id: 'today', label: "Aujourd'hui", icon: Sun },
+  { id: 'week', label: 'Semaine', icon: CalendarRange },
+  { id: 'stats', label: 'Stats', icon: Gauge },
+  { id: 'coach', label: 'Coach', icon: MessageSquare },
+] as const;
+
+const getInitialAthlete = (): AthleteId => {
+  if (typeof window !== 'undefined') {
+    const params = new URLSearchParams(window.location.search);
+    const param = params.get('athlete')?.toLowerCase();
+    if (param === 'louis' || param === 'clara' || param === 'duo') {
+      return param as AthleteId;
+    }
+    const saved = localStorage.getItem('garmin_duo_athlete');
+    if (saved === 'louis' || saved === 'clara' || saved === 'duo') {
+      return saved as AthleteId;
+    }
+  }
+  return 'duo';
+};
 
 export const App: React.FC = () => {
-  // Athlete Selector State ('duo' by default, or 'louis' | 'clara')
-  const [currentAthlete, setCurrentAthlete] = useState<AthleteId>('duo');
+  // Athlete Selector State ('duo' by default, or 'louis' | 'clara' from URL / storage)
+  const [currentAthlete, setCurrentAthlete] = useState<AthleteId>(getInitialAthlete);
+  // Onglet actif — un seul rôle par écran
+  const [activeTab, setActiveTab] = useState<'today' | 'week' | 'stats' | 'coach'>('today');
 
   // Application Data States
   const [status, setStatus] = useState<AthleteStatus | null>(null);
@@ -54,6 +81,7 @@ export const App: React.FC = () => {
   const [activityModalOpen, setActivityModalOpen] = useState(false);
   const [customizerDay, setCustomizerDay] = useState<DayPlan | null>(null);
   const [modalDay, setModalDay] = useState<DayPlan | null>(null);
+  const [startPrepOpen, setStartPrepOpen] = useState(false);
 
   const [weeklyOffset, setWeeklyOffset] = useState<number>(0);
   const [loadingPlan, setLoadingPlan] = useState<boolean>(false);
@@ -118,6 +146,14 @@ export const App: React.FC = () => {
   const handleSelectAthlete = (athlete: AthleteId) => {
     if (athlete === currentAthlete) return;
     setCurrentAthlete(athlete);
+    try {
+      localStorage.setItem('garmin_duo_athlete', athlete);
+      const url = new URL(window.location.href);
+      url.searchParams.set('athlete', athlete);
+      window.history.replaceState({}, '', url.toString());
+    } catch {
+      // Ignore in non-browser environments
+    }
     setLoadingInitial(true);
   };
 
@@ -160,7 +196,7 @@ export const App: React.FC = () => {
           particleCount: 40,
           spread: 60,
           origin: { y: 0.8 },
-          colors: ['#4EA8DE', '#3FA372', '#9D78DE'],
+          colors: ['#2563EB', '#059669', '#B45309'],
         });
       }
     } catch (err: any) {
@@ -175,6 +211,16 @@ export const App: React.FC = () => {
     } finally {
       setLoadingChat(false);
     }
+  };
+
+  // Démarrage de la préparation : bascule sur le coach et lance le cadrage du plan en duo
+  const handleStartPrepCoach = () => {
+    setStartPrepOpen(false);
+    setActiveTab('coach');
+    handleSendMessage(
+      "On démarre la préparation en duo ! Peux-tu animer le cadrage initial : valider nos allures repères, rappeler les règles d'or, puis co-construire avec nous l'emploi du temps hebdomadaire et l'organisation des semaines ?",
+      true
+    );
   };
 
   // Memory Fact Operations
@@ -258,7 +304,7 @@ export const App: React.FC = () => {
       particleCount: 50,
       spread: 70,
       origin: { y: 0.6 },
-      colors: ['#4EA8DE', '#E0583A', '#9D78DE'],
+      colors: ['#2563EB', '#C2417A', '#B45309'],
     });
     const updated = await api.getWeeklyPlan(weeklyOffset, currentAthlete);
     setWeeklyPlan(updated);
@@ -290,7 +336,7 @@ export const App: React.FC = () => {
       particleCount: 45,
       spread: 60,
       origin: { y: 0.7 },
-      colors: ['#D99738', '#3FA372', '#4EA8DE'],
+      colors: ['#B45309', '#059669', '#2563EB'],
     });
     loadDashboardData();
   };
@@ -318,7 +364,7 @@ export const App: React.FC = () => {
       particleCount: 40,
       spread: 60,
       origin: { y: 0.7 },
-      colors: ['#4EA8DE', '#E0583A', '#9D78DE'],
+      colors: ['#2563EB', '#C2417A', '#B45309'],
     });
     const updated = await api.getWeeklyPlan(weeklyOffset, currentAthlete);
     setWeeklyPlan(updated);
@@ -333,7 +379,7 @@ export const App: React.FC = () => {
     weeklyPlan?.days?.find((d) => d.is_today || (weeklyPlan?.today_iso && d.date_iso === weeklyPlan.today_iso)) || null;
 
   return (
-    <div className="min-h-screen max-w-7xl mx-auto px-3 sm:px-6 py-4 sm:py-6 text-slate-200">
+    <div className="min-h-screen max-w-7xl mx-auto px-3 sm:px-6 py-4 sm:py-6 text-ink">
       {/* 1. Header (Brand, Athlete Switcher, Garmin Connection, Memory) */}
       <Header
         status={status}
@@ -341,28 +387,47 @@ export const App: React.FC = () => {
         currentAthlete={currentAthlete}
         onSelectAthlete={handleSelectAthlete}
         onOpenMemory={() => setMemoryModalOpen(true)}
+        onStartPrep={() => setStartPrepOpen(true)}
       />
 
-      {/* Proactive Adaptation Alert if any */}
+      {/* Proactive Adaptation Alert if any — toujours visible (c'est une alerte) */}
       <AdaptationAlert
         adaptation={adaptation}
         onApply={handleApplyAdaptation}
         onDismiss={handleDismissAdaptation}
       />
 
-      {/* ZONE 5: Barre de progression commune 10k */}
-      <ProgressionBanner
-        progression={weeklyPlan?.progression || null}
-        scorecard={weeklyPlan?.scorecard || weeklyPlan?.calendar?.scorecard}
-        louisScorecard={weeklyPlan?.louis_scorecard}
-        claraScorecard={weeklyPlan?.clara_scorecard}
-      />
+      {/* Barre d'onglets — un seul rôle par écran */}
+      <nav className="mt-5 mb-5" aria-label="Sections du cockpit">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
+          {TABS.map((tab) => {
+            const Icon = tab.icon;
+            const active = activeTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => setActiveTab(tab.id)}
+                aria-current={active ? 'page' : undefined}
+                className={cn(
+                  'flex items-center justify-center gap-2.5 rounded-card px-4 py-3.5 text-base font-semibold transition-all',
+                  active
+                    ? 'bg-athlete-cyan text-white shadow-[0_4px_14px_-4px_rgba(37,99,235,0.5)]'
+                    : 'bg-surface-1 text-ink-muted border border-border hover:bg-surface-2 hover:text-ink'
+                )}
+              >
+                <Icon className="w-5 h-5 flex-shrink-0" />
+                <span>{tab.label}</span>
+              </button>
+            );
+          })}
+        </div>
+      </nav>
 
-      {/* Main Single-Page Cockpit Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
-        {/* Colonne Principale Gauche : Hero Séance du Jour, Emploi du Temps Commun (Zone 1) & Sorties Récentes (Zone 4) */}
-        <div className="lg:col-span-7 xl:col-span-8 space-y-5">
-          {/* HERO : Séance du Jour Haute Visibilité */}
+      {/* Contenu de l'onglet actif */}
+      {activeTab === 'today' && (
+        <div className="space-y-5">
+          {/* HERO : Séance du Jour */}
           <TodayActionCard
             todaySession={todaySession}
             onScheduleWorkout={handleScheduleWorkout}
@@ -370,7 +435,19 @@ export const App: React.FC = () => {
             onOpenManualModal={(day) => setModalDay(day)}
           />
 
-          {/* ZONE 1 : Emploi du Temps Commun */}
+          {/* Progression 10k — fine, en bas de l'écran du jour */}
+          <ProgressionBanner
+            progression={weeklyPlan?.progression || null}
+            scorecard={weeklyPlan?.scorecard || weeklyPlan?.calendar?.scorecard}
+            louisScorecard={weeklyPlan?.louis_scorecard}
+            claraScorecard={weeklyPlan?.clara_scorecard}
+          />
+        </div>
+      )}
+
+      {activeTab === 'week' && (
+        <div className="space-y-5">
+          {/* Emploi du Temps Commun */}
           <CommonSchedule
             days={weeklyPlan?.days || []}
             loading={loadingInitial || loadingPlan}
@@ -397,7 +474,7 @@ export const App: React.FC = () => {
             onGeneratePlan={handleGeneratePlan}
           />
 
-          {/* ZONE 4 : Sorties Récentes Synchronisées */}
+          {/* Sorties Récentes Synchronisées */}
           <RecentActivities
             activities={activities}
             loading={loadingInitial || loadingActivities}
@@ -411,10 +488,11 @@ export const App: React.FC = () => {
             }}
           />
         </div>
+      )}
 
-        {/* Colonne Latérale Droite : Stats Garmin à tous les deux (Zone 3) & Chat Coach IA (Zone 2) */}
-        <div className="lg:col-span-5 xl:col-span-4 space-y-5">
-          {/* ZONE 3 : Stats Garmin à tous les deux */}
+      {activeTab === 'stats' && (
+        <div className="space-y-5">
+          {/* Stats Garmin à tous les deux */}
           <GarminDuoStats
             biometrics={biometrics}
             loading={loadingInitial || loadingBiometrics}
@@ -429,17 +507,28 @@ export const App: React.FC = () => {
                 .finally(() => setLoadingBiometrics(false));
             }}
           />
+        </div>
+      )}
 
-          {/* ZONE 2 : Chat Coach IA */}
+      {activeTab === 'coach' && (
+        <div className="max-w-3xl mx-auto space-y-5">
+          {/* Chat Coach IA — largeur contrainte pour rester lisible */}
           <CoachChat
             messages={messages}
             loading={loadingChat}
             onSendMessage={handleSendMessage}
           />
         </div>
-      </div>
+      )}
 
       {/* Global Modals */}
+      <StartPrepModal
+        open={startPrepOpen}
+        onClose={() => setStartPrepOpen(false)}
+        onTalkToCoach={handleStartPrepCoach}
+        onPlanGenerated={() => loadDashboardData()}
+      />
+
       <MemoryModal
         open={memoryModalOpen}
         onOpenChange={setMemoryModalOpen}
