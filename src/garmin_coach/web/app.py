@@ -526,6 +526,10 @@ async def api_chat(request):
         if not message:
             return JSONResponse({"error": "Message vide"}, status_code=400)
 
+        msg_lower = message.lower()
+        if athlete_context == "louis" and any(k in msg_lower for k in ["duo", "couple", "clara", "nos entrainement", "nos entraînement", "nos emploie", "notre programme", "paramétrage"]):
+            athlete_context = "duo"
+
         # 1. Initialize Memory and learn from incoming message
         memory = CoachMemory()
         learned_facts = memory.auto_learn_from_message(message, athlete_context=athlete_context)

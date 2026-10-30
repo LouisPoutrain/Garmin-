@@ -422,7 +422,7 @@ class DuoSynergyRepository:
                 """
                 SELECT id, session_date, common_workout_type, louis_feedback, clara_feedback, pacing_delta_sec, synergy_rating
                 FROM duo_synergy_logs
-                ORDER BY session_date DESC
+                ORDER BY session_date DESC, id DESC
                 LIMIT ?
                 """,
                 (limit,),
@@ -439,5 +439,32 @@ class DuoSynergyRepository:
                 }
                 for r in rows
             ]
+        finally:
+            conn.close()
+
+    @staticmethod
+    def get_by_id(log_id: int) -> Optional[Dict[str, Any]]:
+        init_db()
+        conn = get_connection()
+        try:
+            r = conn.execute(
+                """
+                SELECT id, session_date, common_workout_type, louis_feedback, clara_feedback, pacing_delta_sec, synergy_rating
+                FROM duo_synergy_logs
+                WHERE id = ?
+                """,
+                (log_id,),
+            ).fetchone()
+            if not r:
+                return None
+            return {
+                "id": r["id"],
+                "session_date": str(r["session_date"]),
+                "common_workout_type": r["common_workout_type"],
+                "louis_feedback": r["louis_feedback"] or "",
+                "clara_feedback": r["clara_feedback"] or "",
+                "pacing_delta_sec": r["pacing_delta_sec"],
+                "synergy_rating": r["synergy_rating"],
+            }
         finally:
             conn.close()

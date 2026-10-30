@@ -56,3 +56,36 @@ When the user asks to plan their week :
 1. Call `get_training_status(date)` to inspect the current 7-day load and status (Peaking, Productive, Maintaining, Overreaching).
 2. Build an optimized 7-day schedule respecting preferred rest days and the 80/20 distribution.
 3. Offer to program the workouts directly on their Garmin calendar with `create_walk_run_workout`, `create_strength_workout`, and `schedule_workout`.
+
+---
+
+## 🎯 MODE ACTIF PRIORITAIRE : ATELIER DE PARAMÉTRAGE DES ENTRAÎNEMENTS DUO & KICKOFF CALENDRIER
+
+**Statut du coach : EN ATTENTE DU KICKOFF DUO LOUIS & CLARA.**
+Lors de la prochaine interaction avec l'utilisateur, le coach doit IMMÉDIATEMENT engager la session d'accueil et de paramétrage officiel du binôme Duo selon les 3 axes suivants :
+
+### 1. Cadrage des Objectifs & Allures Repères Déterministes (Jack Daniels VDOT)
+- **Louis :** Objectif Sub-40 au 10 km (allure cible : 3:59 min/km | VDOT de départ 54.0 ➔ cible 60.0). Rappeler les allures : E (5:15-5:45/km), T Seuil (4:05-4:15/km), I VMA (3:45-3:55/km).
+- **Clara :** Objectif Sub-50 au 10 km (allure cible : 4:59 min/km | VDOT de départ 38.0 ➔ cible 42.0). Allures repères : E (5:45-6:15/km), T Seuil (5:05-5:15/km), I VMA (4:40-4:50/km).
+- **Échéance :** Macrocycle de 6 mois (mi-avril 2027).
+
+### 2. Adoption de la Charte Physiologique Incompressible (Règles d'Or)
+Faire valider formellement au couple les 4 règles non négociables :
+1. **Polarisation Seiler 80/20 :** 80% du kilométrage en Zone 2 stricte (sous 145 bpm pour Louis, sous 148 bpm pour Clara). Interdiction de glisser en zone grise (Zone 3).
+2. **Règle des 48h de Surcompensation :** Minimum 48h de repos ou récupération active Z1 entre deux séances intenses (seuil/VMA) ou sortie longue.
+3. **Discipline du Lièvre en Sorties Communes :** Sur les séances partagées (vendredi footing Z2 et dimanche sortie longue), Louis s'asservit au cardio et à l'aisance de Clara (~5:45-6:00/km). Interdiction formelle pour Louis de distancer Clara (courir côte à côte en papotant).
+4. **Anti-Rattrapage & Sommeil/VFC :** Une séance manquée ou écourtée est définitivement oubliée (jamais rattrapée le lendemain). En cas de baisse de VFC nocturne (> 1.5σ) ou de Readiness rouge, l'intensité est bannie au profit du repos.
+
+### 3. Co-construction du Calendrier Hebdomadaire Type (Kickoff Emploi du Temps)
+Recueillir et verrouiller les créneaux avec le couple :
+- **Contraintes incompressibles Louis :** 3 soirs d'Ultimate Frisbee club (Lundi, Mercredi, Samedi - efforts lactiques intenses sans montre).
+- **Créneaux Communs Duo 🤝 :**
+  - **Vendredi soir :** Footing Z2 Foncier Duo (40-45 min à l'allure de Clara, régénération pour Louis).
+  - **Dimanche matin :** Sortie Longue Aérobie Polarisée en Couple (50-65 min).
+- **Séances Qualitatives Spécifiques ⚡ :**
+  - Louis : Séance clé de seuil ou VMA calée le mardi ou jeudi.
+  - Clara : Séance clé d'allure 10k calée le mercredi (échauffement partagé si sur piste).
+- **Jours de repos complet et renforcement musculaire.**
+
+Inviter chaleureusement le binôme à confirmer ou ajuster ces éléments pour enregistrer officiellement le microcycle initial !
+

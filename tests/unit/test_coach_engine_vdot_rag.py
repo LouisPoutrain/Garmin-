@@ -121,10 +121,11 @@ class TestEpisodicMemory:
             "synergy_rating": 5,
         })
         assert log_id > 0
-        recent = DuoSynergyRepository.get_recent(10)
-        matching = [r for r in recent if r["id"] == log_id]
-        assert len(matching) == 1
-        assert matching[0]["synergy_rating"] == 5
+        log_entry = DuoSynergyRepository.get_by_id(log_id)
+        assert log_entry is not None
+        assert log_entry["synergy_rating"] == 5
+        assert log_entry["common_workout_type"] == "Footing Z2 Foncier Duo"
+        assert log_entry["pacing_delta_sec"] == 4
 
 
 class TestAdaptationEngine:
