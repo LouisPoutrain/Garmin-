@@ -25,15 +25,19 @@ class DoctrineStore:
         )
         self._ensure_doctrine_indexed()
 
-    def _ensure_doctrine_indexed(self) -> None:
+    def reindex_all(self) -> int:
+        """Forces full re-indexing of all markdown files in knowledge/doctrine/."""
+        return self._ensure_doctrine_indexed(force=True)
+
+    def _ensure_doctrine_indexed(self, force: bool = False) -> int:
         """Parses markdown files in knowledge/doctrine/ by H2 (##) and indexes into Chroma."""
         count = self.collection.count()
-        if count > 0:
-            return
+        if count > 0 and not force:
+            return count
 
         if not DOCTRINE_DIR.exists():
             print(f"Warning: Doctrine directory not found at {DOCTRINE_DIR}")
-            return
+            return 0
 
         documents = []
         metadatas = []

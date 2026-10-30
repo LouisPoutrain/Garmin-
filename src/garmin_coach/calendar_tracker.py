@@ -19,6 +19,11 @@ from garmin_coach.temporal import (
     format_full_date_fr,
     parse_iso_or_local_date,
 )
+from garmin_coach.planner import (
+    resolve_duo_schedule_conflict,
+    reschedule_with_48h_rule,
+    convert_travel_week_to_mobility,
+)
 
 DATA_DIR = Path(__file__).resolve().parents[2] / "data"
 MANUAL_COMPLETIONS_FILE = DATA_DIR / "manual_completions.json"

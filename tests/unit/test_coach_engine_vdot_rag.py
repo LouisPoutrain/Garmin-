@@ -121,9 +121,10 @@ class TestEpisodicMemory:
             "synergy_rating": 5,
         })
         assert log_id > 0
-        recent = DuoSynergyRepository.get_recent(5)
-        assert len(recent) >= 1
-        assert recent[0]["synergy_rating"] == 5
+        recent = DuoSynergyRepository.get_recent(10)
+        matching = [r for r in recent if r["id"] == log_id]
+        assert len(matching) == 1
+        assert matching[0]["synergy_rating"] == 5
 
 
 class TestAdaptationEngine:
@@ -150,3 +151,68 @@ class TestAdaptationEngine:
         assert "ACWR" in proposal["trigger_reason"]
         assert "VFC" in proposal["trigger_reason"]
         assert len(proposal.get("doctrine_rules", [])) > 0
+
+
+class TestDynamicScheduleManagement:
+    """Tests schedule conflict resolution, 48h spacing, and hotel travel mobility conversion."""
+
+    def test_duo_schedule_conflict_resolution(self):
+        from garmin_coach.planner import resolve_duo_schedule_conflict
+        res = resolve_duo_schedule_conflict(
+            louis_availabilities=["Mardi", "Jeudi"],
+            clara_availabilities=["Mercredi", "Jeudi"],
+        )
+        assert res["status"] == "success"
+        assert res["common_slot"] == "Jeudi"
+        assert res["audit_checks"]["common_slot_identified"] is True
+        assert res["audit_checks"]["no_intensity_clustering"] is True
+        # Check Thursday has shared session
+        louis_thu = next(d for d in res["louis_schedule"] if d["day"] == "Jeudi")
+        clara_thu = next(d for d in res["clara_schedule"] if d["day"] == "Jeudi")
+        assert louis_thu.get("is_shared") is True
+        assert clara_thu.get("is_shared") is True
+
+    def test_reschedule_with_48h_cascade(self):
+        from garmin_coach.planner import reschedule_with_48h_rule
+        template = [
+            {"day": "Lundi", "type": "Repos", "sport": "recovery"},
+            {"day": "Mardi", "type": "Fractionné VMA (8x1 min)", "sport": "running", "is_key": True},
+            {"day": "Mercredi", "type": "Footing Z2 (40 min)", "sport": "running"},
+            {"day": "Jeudi", "type": "Séance Clé Seuil (4x1000m)", "sport": "running", "is_key": True},
+            {"day": "Vendredi", "type": "Repos", "sport": "recovery"},
+            {"day": "Samedi", "type": "Footing Z2 Duo", "sport": "running"},
+            {"day": "Dimanche", "type": "Sortie Longue 75 min", "sport": "running", "is_key": True},
+        ]
+        res = reschedule_with_48h_rule(template, from_day="Mardi", to_day="Mercredi", reason="Rush taf")
+        assert res["status"] == "adapted"
+        assert res["rule_48h_enforced"] is True
+        # Wednesday has the VMA session
+        wed = res["adapted_schedule"][2]
+        assert "VMA" in wed["type"]
+        # Thursday must be recovery (not Seuil)
+        thu = res["adapted_schedule"][3]
+        assert thu["sport"] == "recovery"
+        assert "48h" in thu["type"]
+        # Friday must have received the Seuil session
+        fri = res["adapted_schedule"][4]
+        assert "Seuil" in fri["type"]
+
+    def test_convert_travel_week_to_mobility(self):
+        from garmin_coach.planner import convert_travel_week_to_mobility
+        template = [
+            {"day": "Lundi", "type": "Repos", "sport": "recovery"},
+            {"day": "Mardi", "type": "Footing Z2", "sport": "running"},
+            {"day": "Mercredi", "type": "Fractionné Seuil", "sport": "running", "is_key": True},
+            {"day": "Jeudi", "type": "Footing Z2", "sport": "running"},
+            {"day": "Vendredi", "type": "Repos", "sport": "recovery"},
+            {"day": "Samedi", "type": "Footing Z2 Duo", "sport": "running"},
+            {"day": "Dimanche", "type": "Sortie Longue", "sport": "running", "is_key": True},
+        ]
+        res = convert_travel_week_to_mobility(template, ["Mardi", "Mercredi", "Jeudi"], "Hôtel Francfort")
+        assert res["status"] == "travel_adapted"
+        assert len(res["converted_sessions"]) == 3
+        assert res["guilt_free_messaging"] is True
+        # Converted days must be strength or recovery (no running)
+        for day_name in ["Mardi", "Mercredi", "Jeudi"]:
+            d_item = next(d for d in res["adapted_schedule"] if d["day"] == day_name)
+            assert d_item["sport"] in ["strength", "recovery"]

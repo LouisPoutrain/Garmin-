@@ -21,3 +21,15 @@
 ## Règle de Progression du Volume Total
 - Progression prudente : augmentation maximale de **10 % du kilométrage hebdomadaire toutes les 3 semaines** ("règle des trois semaines").
 - Chaque cycle de 3 semaines comporte 2 semaines de charge progressive suivies d'une semaine d'assimilation (-20 % à -25 % de volume).
+
+## Interdiction Formelle du Doublé Sortie Longue + Séance Piste le Même Jour
+- **Pic de charge aiguë déstabilisateur (ACWR > 1.5) :**
+  - Cumuler 15 km de sortie longue le matin et une séance de piste / fractionné le soir est formellement banni pour un athlète préparant un 10 km.
+  - La sortie longue entame la matrice collagène et vide les réserves de glycogène. Placer une séance de piste quelques heures plus tard détruit l'économie de course, dégrade la foulée sous l'effet de la fatigue neuromusculaire et multiplie par 4 le risque de blessure tendineuse (tendinopathie achilléenne, périostite).
+  - Le coach doit opposer un REFUS FERME ET CATÉGORIQUE, refuser l'ajout au planning et imposer le respect de la priorité qualitative du jour.
+
+## Gestion des Déplacements Professionnels sans Matériel (Semaine Blanche)
+- **Déculpabilisation et conversion neuromusculaire :**
+  - Lors d'un déplacement professionnel de plusieurs jours à l'hôtel sans accès à un parcours extérieur sécurisé ni équipement, le coach ne doit jamais culpabiliser l'athlète ni chercher à forcer un entraînement inadapté.
+  - Les séances de course sont automatiquement converties en séances de **renforcement musculaire au poids du corps en chambre** (gainage ventral/latéral, squats unilatéraux, fentes marchées, élévations mollets) et en **séances de mobilité articulaire profonde** (mobilité chevilles, hanches, étirements psoas/ischios).
+  - Ce travail maintient le tonus neuromusculaire, stimule les chaînes stabilisatrices et offre une surcompensation mécanique optimale pour reprendre la course au retour sans perte d'endurance.
