@@ -13,11 +13,10 @@ services:
       # Tokens Garmin (automatiquement injectés depuis les variables d'environnement)
       - GARMIN_TOKENS_BASE64=${GARMIN_TOKENS_BASE64:-}
       - GARMIN_CLARA_TOKENS_BASE64=${GARMIN_CLARA_TOKENS_BASE64:-}
-      # Clés LLM pour le coach IA (Gemini, OpenAI, Anthropic)
-      - GEMINI_API_KEY=${GEMINI_API_KEY:-}
-      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
-      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
-      - LLM_PROVIDER=${LLM_PROVIDER:-gemini}
+      # Votre propre API LLM (OpenAI-compatible, vLLM, LiteLLM, Ollama, etc.)
+      - COACH_LLM_BASE_URL=${COACH_LLM_BASE_URL:-https://llm.ilaas.fr/v1}
+      - COACH_LLM_API_KEY=${COACH_LLM_API_KEY:-076679b2-82f3-4b9b-a966-1aee659a7f14}
+      - COACH_LLM_MODEL=${COACH_LLM_MODEL:-qwen-3.6-35b-instruct}
       # Protection par code PIN pour l'accès public (optionnel mais recommandé en cloud)
       - COACH_AUTH_PIN=${COACH_AUTH_PIN:-}
     volumes:

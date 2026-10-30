@@ -15,13 +15,18 @@ services:
         value: 0.0.0.0
       - key: PORT
         value: 5050
-      - key: LLM_PROVIDER
-        value: gemini
-      - key: GEMINI_API_KEY
+      # Votre propre API LLM (OpenAI-compatible, vLLM, LiteLLM, etc.)
+      - key: COACH_LLM_BASE_URL
         sync: false
+      - key: COACH_LLM_API_KEY
+        sync: false
+      - key: COACH_LLM_MODEL
+        sync: false
+      # Jetons de connexion Garmin
       - key: GARMIN_TOKENS_BASE64
         sync: false
       - key: GARMIN_CLARA_TOKENS_BASE64
         sync: false
+      # Code PIN d'accès sécurisé pour le couple
       - key: COACH_AUTH_PIN
         sync: false

@@ -48,8 +48,10 @@ uv run python scripts/export_cloud_tokens.py
 Le script va afficher directement dans votre terminal vos variables prêtes à copier-coller :
 - `GARMIN_TOKENS_BASE64` (Jetons de session de Louis)
 - `GARMIN_CLARA_TOKENS_BASE64` (Jetons de session de Clara)
+- `COACH_LLM_BASE_URL` (L'URL de votre propre API LLM ou proxy OpenAI)
+- `COACH_LLM_API_KEY` (Votre clé API personnelle)
+- `COACH_LLM_MODEL` (Votre modèle LLM préféré)
 - `COACH_AUTH_PIN` (Code PIN à 4 chiffres pour protéger l'accès du couple)
-- `GEMINI_API_KEY` (Votre clé API pour le LLM)
 
 ---
 
@@ -66,7 +68,9 @@ Render est la solution la plus simple avec interface graphique et support natif 
    Dans le formulaire de déploiement, collez les valeurs fournies par le script :
    - `GARMIN_TOKENS_BASE64`
    - `GARMIN_CLARA_TOKENS_BASE64`
-   - `GEMINI_API_KEY`
+   - `COACH_LLM_BASE_URL`
+   - `COACH_LLM_API_KEY`
+   - `COACH_LLM_MODEL`
    - `COACH_AUTH_PIN` : Choisissez un code PIN secret pour vous deux (ex : `2027` ou `4050`).
 4. **Lancer :** Cliquez sur **Apply**.
    - Render va compiler le frontend React et lancer le conteneur Python.

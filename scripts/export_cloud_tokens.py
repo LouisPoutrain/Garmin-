@@ -1,9 +1,20 @@
 #!/usr/bin/env python3
-"""Helper script to export Garmin Duo OAuth tokens as base64 environment variables for Cloud deployment."""
+"""Helper script to export Garmin Duo OAuth tokens and LLM config as environment variables for Cloud deployment."""
 
 import os
 import base64
 from pathlib import Path
+
+
+def load_local_env():
+    """Simple parser to load .env if present without extra dependencies."""
+    env_path = Path(__file__).resolve().parents[1] / ".env"
+    if env_path.exists():
+        for line in env_path.read_text(encoding="utf-8").splitlines():
+            line = line.strip()
+            if line and not line.startswith("#") and "=" in line:
+                k, v = line.split("=", 1)
+                os.environ.setdefault(k.strip(), v.strip())
 
 
 def get_token_b64(athlete: str) -> str:
@@ -26,12 +37,13 @@ def get_token_b64(athlete: str) -> str:
 
 
 def main():
-    print("=" * 68)
-    print("🔑 EXPORT DES TOKENS GARMIN DUO POUR DÉPLOIEMENT CLOUD 24/7")
-    print("=" * 68)
+    load_local_env()
+
+    print("=" * 70)
+    print("🔑 VARIABLES D'ENVIRONNEMENT GARMIN DUO POUR DÉPLOIEMENT CLOUD 24/7")
+    print("=" * 70)
     print("Ces variables permettent à votre application hébergée dans le Cloud")
-    print("(Render, Railway, Fly.io, VPS) de se connecter automatiquement sans")
-    print("aucune saisie de mot de passe ni MFA.\n")
+    print("(Render, Railway, Fly.io, VPS) de fonctionner de manière 100% autonome.\n")
 
     louis_b64 = get_token_b64("louis")
     clara_b64 = get_token_b64("clara")
@@ -41,21 +53,29 @@ def main():
     if not clara_b64:
         print("⚠️  Tokens de Clara introuvables. Lancez d'abord : uv run garmin-coach --auth-clara")
 
+    # LLM configuration (Priority to your own custom API)
+    llm_base = os.getenv("COACH_LLM_BASE_URL") or os.getenv("OPENAI_BASE_URL") or "https://llm.ilaas.fr/v1"
+    llm_key = os.getenv("COACH_LLM_API_KEY") or os.getenv("OPENAI_API_KEY") or "076679b2-82f3-4b9b-a966-1aee659a7f14"
+    llm_model = os.getenv("COACH_LLM_MODEL") or os.getenv("OPENAI_MODEL") or "qwen-3.6-35b-instruct"
+
     print("📋 COPIEZ-COLLEZ CES VARIABLES DANS VOTRE HÉBERGEUR CLOUD :")
-    print("-" * 68)
+    print("-" * 70)
     if louis_b64:
         print(f"GARMIN_TOKENS_BASE64={louis_b64}")
     if clara_b64:
         print(f"GARMIN_CLARA_TOKENS_BASE64={clara_b64}")
     print("HOST=0.0.0.0")
     print("PORT=5050")
-    print("LLM_PROVIDER=gemini")
-    print("# Clé API du LLM (ex: Google AI Studio pour Gemini) :")
-    print("GEMINI_API_KEY=votre_cle_gemini_ici")
+    print()
+    print("# Configuration de votre propre API LLM (OpenAI-compatible / vLLM / LiteLLM) :")
+    print(f"COACH_LLM_BASE_URL={llm_base}")
+    print(f"COACH_LLM_API_KEY={llm_key}")
+    print(f"COACH_LLM_MODEL={llm_model}")
+    print()
     print("# Code PIN secret à 4 chiffres pour protéger l'accès public du couple :")
     print("COACH_AUTH_PIN=2027")
-    print("-" * 68)
-    print("\n✓ Tout est prêt pour un déploiement 100% autonome !")
+    print("-" * 70)
+    print("\n✓ Vous utilisez votre propre API LLM sans dépendre de Gemini !")
 
 
 if __name__ == "__main__":

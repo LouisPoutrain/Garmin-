@@ -15,35 +15,38 @@ class CoachLLMClient:
         api_key: Optional[str] = None,
         model: Optional[str] = None,
     ):
-        # Check for Google Gemini configuration
+        # 1. Custom or OpenAI-compatible endpoint (e.g. your own API, vLLM, LiteLLM, Ollama, Mistral)
+        custom_base = (
+            base_url
+            or os.getenv("COACH_LLM_BASE_URL")
+            or os.getenv("OPENAI_BASE_URL")
+            or os.getenv("LITELLM_BASE_URL")
+        )
+        custom_key = (
+            api_key
+            or os.getenv("COACH_LLM_API_KEY")
+            or os.getenv("OPENAI_API_KEY")
+            or os.getenv("LITELLM_API_KEY")
+        )
+        custom_model = (
+            model
+            or os.getenv("COACH_LLM_MODEL")
+            or os.getenv("OPENAI_MODEL")
+            or os.getenv("LLM_MODEL")
+        )
+
         gemini_key = os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
         configured_provider = os.getenv("COACH_LLM_PROVIDER", "").lower()
 
-        if gemini_key and (configured_provider == "gemini" or "gemini" in (model or os.getenv("COACH_LLM_MODEL", "")).lower() or not os.getenv("COACH_LLM_BASE_URL")):
+        # Only use Gemini if explicitly requested or if no custom API is provided and a gemini key exists
+        if configured_provider == "gemini" or (gemini_key and not custom_base and "gemini" in (custom_model or "").lower()):
             self.base_url = "https://generativelanguage.googleapis.com/v1beta/openai"
             self.api_key = gemini_key
-            self.model = model or os.getenv("COACH_LLM_MODEL") or "gemini-2.0-flash"
+            self.model = custom_model or "gemini-2.0-flash"
         else:
-            # Default priority: user parameter -> env var -> LiteLLM default
-            self.base_url = (
-                base_url
-                or os.getenv("COACH_LLM_BASE_URL")
-                or os.getenv("LITELLM_BASE_URL")
-                or "https://llm.ilaas.fr/v1"
-            ).rstrip("/")
-            
-            self.api_key = (
-                api_key
-                or os.getenv("COACH_LLM_API_KEY")
-                or os.getenv("LITELLM_API_KEY")
-                or "076679b2-82f3-4b9b-a966-1aee659a7f14"
-            )
-            
-            self.model = (
-                model
-                or os.getenv("COACH_LLM_MODEL")
-                or "qwen-3.6-35b-instruct"
-            )
+            self.base_url = (custom_base or "https://llm.ilaas.fr/v1").rstrip("/")
+            self.api_key = custom_key or "076679b2-82f3-4b9b-a966-1aee659a7f14"
+            self.model = custom_model or "qwen-3.6-35b-instruct"
 
     def generate_coach_response(
         self,
